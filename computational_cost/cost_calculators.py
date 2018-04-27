@@ -94,7 +94,7 @@ def calc_activation(function, in_data, **kwargs):
 
 def calc_reshape(function, in_data, **kwargs):
     size = in_data[0].size
-    return (0, size, size)
+    return (0, 0, 0)
 
 def calc_max_pooling2d(function, in_data, **kwargs):
     x, = in_data

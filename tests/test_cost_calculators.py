@@ -15,8 +15,8 @@ def test_reshape():
     f = F.Reshape((1, -1))
     ops, mread, mwrite = calc_reshape(f, [x])
     assert ops == 0
-    assert mread == x.size
-    assert mwrite == x.size
+    assert mread == 0
+    assert mwrite == 0
 
 def test_activation_relu():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
