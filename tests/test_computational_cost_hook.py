@@ -5,7 +5,7 @@ import chainer.functions as F
 import chainer.links as L
 import numpy as np
 
-import computational_cost
+import chainer_computational_cost
 
 
 class SimpleConvNet(chainer.Chain):
@@ -36,6 +36,6 @@ def test_simple_net():
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
     net = SimpleConvNet()
     with chainer.using_config('train', False):
-        with computational_cost.ComputationalCostHook() as cost:
+        with chainer_computational_cost.ComputationalCostHook() as cost:
             net(x)
 

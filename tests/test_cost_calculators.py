@@ -6,8 +6,8 @@ import chainer.functions.connection
 import chainer.links as L
 import numpy as np
 
-import computational_cost
-from computational_cost.cost_calculators import *
+import chainer_computational_cost
+from chainer_computational_cost.cost_calculators import *
 
 
 def test_reshape():
