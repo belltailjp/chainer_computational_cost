@@ -157,6 +157,7 @@ calculators = {
     'MaxPooling2D': calc_max_pooling2d,
     'AveragePooling2D': calc_average_pooling2d,
     'ResizeImages': calc_resize,
-    'Concat': calc_concat
+    'Concat': calc_concat,
+    'Shift': calc_shift
 }
 
