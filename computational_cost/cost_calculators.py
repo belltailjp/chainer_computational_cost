@@ -144,10 +144,10 @@ def calc_concat(function, in_data, **kwargs):
 
 
 calculators = {
-    'Add': calc_eltw_op, 'AddConstant': calc_eltw_op,
-    'Sub': calc_eltw_op, 'SubFromConstant': calc_eltw_op,
-    'Mul': calc_eltw_op, 'MulConstant': calc_eltw_op,
-    'Div': calc_eltw_op, 'DivFromConstant': calc_eltw_op,
+    '_ + _': calc_eltw_op,
+    '_ - _': calc_eltw_op,
+    '_ * _': calc_eltw_op,
+    '_ / _': calc_eltw_op,
     'LinearFunction': calc_linear,
     'Convolution2DFunction': calc_conv2d,
     'ReLU': calc_activation,
