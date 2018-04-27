@@ -8,7 +8,7 @@ from . import cost_calculators
 
 class ComputationalCostHook(chainer.FunctionHook):
     _coeff_table = {
-        None: 1, 'k': 10**3, 'M': 10**6, 'G': 10**6, 'T': 10**9
+        None: 1, 'k': 10**3, 'M': 10**6, 'G': 10**9, 'T': 10**12
     }
 
     def __init__(self, unify_fma=True):
