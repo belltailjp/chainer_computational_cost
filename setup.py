@@ -8,8 +8,12 @@ setup(name='chainer-computational-cost',
       packages=[
           'chainer_computational_cost'
       ],
+      test_require=[
+          'pytest>=3.0.0'
+      ],
       install_requires=[
-          'chainer>=4.0.0'
+          'chainer>=4.0.0',
+          'texttable>=1.2.0'
       ],
       license='MIT'
 )
