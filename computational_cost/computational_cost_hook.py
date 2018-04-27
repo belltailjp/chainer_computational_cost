@@ -26,6 +26,11 @@ class ComputationalCostHook(chainer.FunctionHook):
             res = cal(function, in_data, unify_fma=self._unify_fma)
             ops, mread, mwrite = res
 
+            # to bytes
+            itemsize = in_data[0].dtype.itemsize
+            mread *= itemsize
+            mwrite *= itemsize
+
             if label not in self._label_count:
                 self._label_count[label] = 0
 
