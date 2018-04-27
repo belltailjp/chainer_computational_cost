@@ -51,7 +51,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             print("Warning: {} is not yet supported by "
                   "ComputationalCostHook, ignored".format(label))
 
-    def show_report(self, ost=sys.stdout, mode='csv', unit='G'):
+    def show_report(self, dst=sys.stdout, mode='csv', unit='G'):
         if unit not in self._coeff_table:
             raise ValueError("Please specify either None, 'k', 'M', 'G' or 'T'"
                              " to argument `unit`.")
@@ -64,11 +64,11 @@ class ComputationalCostHook(chainer.FunctionHook):
         self.report['total'] = total
 
         if mode == 'csv':
-            self._show_csv(ost, unit, coeff)
+            self._show_csv(dst, unit, coeff)
         if mode == 'md':
-            self._show_md(ost, unit, coeff)
+            self._show_md(dst, unit, coeff)
         elif mode == 'table':
-            self._show_table(ost, unit, coeff)
+            self._show_table(dst, unit, coeff)
         else:
             raise ValueError("Please specify either 'table' or 'md' to"
                              " argument `mode`")
