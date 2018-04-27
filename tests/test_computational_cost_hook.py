@@ -38,4 +38,3 @@ def test_simple_net():
     with chainer.using_config('train', False):
         with chainer_computational_cost.ComputationalCostHook() as cost:
             net(x)
-

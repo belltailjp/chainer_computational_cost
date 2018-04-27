@@ -15,6 +15,4 @@ setup(name='chainer-computational-cost',
           'chainer>=4.0.0',
           'texttable>=1.2.0'
       ],
-      license='MIT'
-)
-
+      license='MIT')

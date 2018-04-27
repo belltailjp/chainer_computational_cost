@@ -8,6 +8,7 @@ def calc_eltw_op(function, in_data, **kwargs):
     x = in_data[0]
     return (x.size, x.size * 2, x.size)
 
+
 def calc_linear(function, in_data, **kwargs):
     x, W = in_data[:2]
     batch_size, in_c = x.shape
@@ -27,6 +28,7 @@ def calc_linear(function, in_data, **kwargs):
         mread += b.size
 
     return (ops, mread, mwrite)
+
 
 def calc_conv2d(function, in_data, **kwargs):
     x, W = in_data[:2]
@@ -53,6 +55,7 @@ def calc_conv2d(function, in_data, **kwargs):
 
     return (ops * batch_size, mread, mwrite)
 
+
 def calc_deconv2d(function, in_data, **kwargs):
     x, W = in_data[:2]
     b = in_data[2] if len(in_data) == 3 else None
@@ -78,6 +81,7 @@ def calc_deconv2d(function, in_data, **kwargs):
 
     return (ops * batch_size, mread, mwrite)
 
+
 def calc_fixed_bn(function, in_data, **kwargs):
     x, _, _, mean, var = in_data
     x = in_data[0]
@@ -87,14 +91,17 @@ def calc_fixed_bn(function, in_data, **kwargs):
     mwrite = n_elements
     return (ops, mread, mwrite)
 
+
 def calc_activation(function, in_data, **kwargs):
     x, = in_data
     ops = x.size
     return (ops, ops, ops)
 
+
 def calc_reshape(function, in_data, **kwargs):
     size = in_data[0].size
     return (0, 0, 0)
+
 
 def calc_max_pooling2d(function, in_data, **kwargs):
     x, = in_data
@@ -110,6 +117,7 @@ def calc_max_pooling2d(function, in_data, **kwargs):
 
     return (ops, x.size, out_size)
 
+
 def calc_average_pooling2d(function, in_data, **kwargs):
     x, = in_data
 
@@ -124,19 +132,23 @@ def calc_average_pooling2d(function, in_data, **kwargs):
 
     return (ops, x.size, out_size)
 
+
 def calc_resize(function, in_data, **kwargs):
     x, = in_data
     batch_size, in_c = x.shape[:2]
     out_size = batch_size * in_c * function.out_H * function.out_W
     return (out_size * 18, out_size * 4, out_size)
 
+
 def calc_shift(function, in_data, **kwargs):
     x, = in_data
     return (0, x.size, x.size)
 
+
 def calc_transpose(function, in_data, **kwargs):
     x, = in_data
     return (0, x.size, x.size)
+
 
 def calc_concat(function, in_data, **kwargs):
     size = sum([x.size for x in in_data])
@@ -160,4 +172,3 @@ calculators = {
     'Concat': calc_concat,
     'Shift': calc_shift
 }
-

@@ -18,6 +18,7 @@ def test_reshape():
     assert mread == 0
     assert mwrite == 0
 
+
 def test_activation_relu():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
     f = F.ReLU()
@@ -25,6 +26,7 @@ def test_activation_relu():
     assert ops == x.size
     assert mread == x.size
     assert mwrite == x.size
+
 
 def test_activation_sigmoid():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
@@ -34,7 +36,8 @@ def test_activation_sigmoid():
     assert mread == x.size
     assert mwrite == x.size
 
-def test_max_pooling(): #TODO: implement more test cases
+
+def test_max_pooling():     # TODO: implement more test cases
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
     f = F.MaxPooling2D(2, 2, 0, cover_all=True)
     ops, mread, mwrite = calc_max_pooling2d(f, [x])
@@ -44,6 +47,7 @@ def test_max_pooling(): #TODO: implement more test cases
     assert ops == (3 * 50 * 50) * (2 * 2 - 1)
     assert mread == x.size
     assert mwrite == (3 * 50 * 50)
+
 
 def test_average_pooling():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
@@ -67,6 +71,7 @@ def test_conv2d_with_bias_unifyfma():
     assert mread == 3 * 10 * 10 + 12 * 3 * 3 * 3 + 12
     assert mwrite == 12 * 10 * 10
 
+
 def test_conv2d_nobias_unifyfma():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     W = np.random.randn(12, 3, 3, 3).astype(np.float32)
@@ -75,6 +80,7 @@ def test_conv2d_nobias_unifyfma():
     assert ops == (12 * 10 * 10) * (3 * 3 * 3)
     assert mread == 3 * 10 * 10 + 12 * 3 * 3 * 3
     assert mwrite == 12 * 10 * 10
+
 
 def test_conv2d_with_bias_no_unifyfma():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
@@ -86,6 +92,7 @@ def test_conv2d_with_bias_no_unifyfma():
     assert mread == 3 * 10 * 10 + 12 * 3 * 3 * 3 + 12
     assert mwrite == 12 * 10 * 10
 
+
 def test_conv2d_nobias_no_unifyfma():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     W = np.random.randn(12, 3, 3, 3).astype(np.float32)
@@ -94,6 +101,7 @@ def test_conv2d_nobias_no_unifyfma():
     assert ops == 2 * (12 * 10 * 10) * (3 * 3 * 3)
     assert mread == 3 * 10 * 10 + 12 * 3 * 3 * 3
     assert mwrite == 12 * 10 * 10
+
 
 def test_deconv2d_with_bias_unifyfma():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
@@ -105,6 +113,7 @@ def test_deconv2d_with_bias_unifyfma():
     assert mread == 3 * 10 * 10 + 3 * 12 * 3 * 3 + 12
     assert mwrite == 12 * 21 * 21
 
+
 def test_deconv2d_nobias_unifyfma():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     W = np.random.randn(3, 12, 3, 3).astype(np.float32)
@@ -113,6 +122,7 @@ def test_deconv2d_nobias_unifyfma():
     assert ops == (3 * 10 * 10) * (12 * 3 * 3)
     assert mread == 3 * 10 * 10 + 3 * 12 * 3 * 3
     assert mwrite == 12 * 21 * 21
+
 
 def test_deconv2d_with_bias_no_unifyfma():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
@@ -123,6 +133,7 @@ def test_deconv2d_with_bias_no_unifyfma():
     assert ops == 2 * (3 * 10 * 10) * (12 * 3 * 3) + (12 * 21 * 21)
     assert mread == 3 * 10 * 10 + 3 * 12 * 3 * 3 + 12
     assert mwrite == 12 * 21 * 21
+
 
 def test_deconv2d_nobias_no_unifyfma():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
@@ -143,6 +154,7 @@ def test_linear_nobias_unifyfma():
     assert mread == 10 + 10 * 20        # input data, and weight matrix
     assert mwrite == 20
 
+
 def test_linear_nobias_nounifyfma():
     x = np.random.randn(1, 10).astype(np.float32)
     w = np.random.randn(20, 10).astype(np.float32)
@@ -155,6 +167,7 @@ def test_linear_nobias_nounifyfma():
     assert mread == 10 + 10 * 20
     assert mwrite == 20
 
+
 def test_linear_withbias_unifyfma():
     x = np.random.randn(1, 10).astype(np.float32)
     w = np.random.randn(20, 10).astype(np.float32)
@@ -164,6 +177,7 @@ def test_linear_withbias_unifyfma():
     assert ops == 10 * 20 + 20
     assert mread == 10 * 20 + 10 + 20   # input data, weight matrix, and bias
     assert mwrite == 20
+
 
 def test_fixed_bn():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
@@ -179,6 +193,7 @@ def test_fixed_bn():
     assert ops == 3 * 10 * 10 * 2
     assert mread == 3 * 10 * 10 + (3 + 3)   # input data, scale and shift param
     assert mwrite == 3 * 10 * 10
+
 
 def test_resize():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
@@ -198,6 +213,7 @@ def test_resize():
     assert mread == 3 * 15 * 15 * 4
     assert mwrite == 3 * 15 * 15
 
+
 def test_shift():
     x = np.random.randn(1, 32, 10, 10).astype(np.float32)
     f = F.connection.shift.Shift(ksize=3, dilate=1)
@@ -205,6 +221,7 @@ def test_shift():
     assert ops == 0     # exclude index calculation
     assert mread == x.size
     assert mwrite == x.size
+
 
 def test_transpose():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
@@ -216,6 +233,7 @@ def test_transpose():
     assert mread == 3 * 10 * 10
     assert mwrite == 3 * 10 * 10
 
+
 def test_concat():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     f = F.array.concat.Concat()
@@ -224,6 +242,7 @@ def test_concat():
     assert ops == 0
     assert mread == 2 * (3 * 10 * 10)
     assert mwrite == 2 * (3 * 10 * 10)
+
 
 def test_concat():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
@@ -234,6 +253,7 @@ def test_concat():
     assert mread == 4 * (3 * 10 * 10)
     assert mwrite == 4 * (3 * 10 * 10)
 
+
 def test_add():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     f = F.math.basic_math.Add()
@@ -242,6 +262,7 @@ def test_add():
     assert ops == 3 * 10 * 10
     assert mread == (3 * 10 * 10) * 2
     assert mwrite == 3 * 10 * 10
+
 
 def test_add_constant():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
@@ -252,6 +273,7 @@ def test_add_constant():
     assert mread == (3 * 10 * 10) * 2
     assert mwrite == 3 * 10 * 10
 
+
 def test_sub():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     f = F.math.basic_math.Sub()
@@ -260,4 +282,3 @@ def test_sub():
     assert ops == 3 * 10 * 10
     assert mread == (3 * 10 * 10) * 2
     assert mwrite == 3 * 10 * 10
-

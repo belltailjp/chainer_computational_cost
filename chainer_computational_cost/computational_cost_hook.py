@@ -107,4 +107,3 @@ class ComputationalCostHook(chainer.FunctionHook):
             rows.append([layer, str(ops), str(mread), str(mwrite)])
         table.add_rows(rows)
         ost.write(table.draw() + '\n')
-
