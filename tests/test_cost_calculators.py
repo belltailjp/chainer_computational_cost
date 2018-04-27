@@ -219,11 +219,20 @@ def test_transpose():
 def test_concat():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     f = F.array.concat.Concat()
-    ops, mread, mwrite = calc_concat(f, [x])
+    ops, mread, mwrite = calc_concat(f, [x, x])
 
     assert ops == 0
-    assert mread == 3 * 10 * 10
-    assert mwrite == 3 * 10 * 10
+    assert mread == 2 * (3 * 10 * 10)
+    assert mwrite == 2 * (3 * 10 * 10)
+
+def test_concat():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.array.concat.Concat()
+    ops, mread, mwrite = calc_concat(f, [x, x, x, x])
+
+    assert ops == 0
+    assert mread == 4 * (3 * 10 * 10)
+    assert mwrite == 4 * (3 * 10 * 10)
 
 def test_add():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)

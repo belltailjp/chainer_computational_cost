@@ -139,8 +139,8 @@ def calc_transpose(function, in_data, **kwargs):
     return (0, x.size, x.size)
 
 def calc_concat(function, in_data, **kwargs):
-    x, = in_data
-    return (0, x.size, x.size)
+    size = sum([x.size for x in in_data])
+    return (0, size, size)
 
 
 calculators = {
@@ -156,6 +156,7 @@ calculators = {
     'Reshape': calc_reshape,
     'MaxPooling2D': calc_max_pooling2d,
     'AveragePooling2D': calc_average_pooling2d,
-    'ResizeImages': calc_resize
+    'ResizeImages': calc_resize,
+    'Concat': calc_concat
 }
 
