@@ -80,7 +80,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             ops /= coeff
             mread /= coeff
             mwrite /= coeff
-            ost.write("{},{},{}\n".format(layer, ops, mread, mwrite))
+            ost.write("{},{},{},{}\n".format(layer, ops, mread, mwrite))
 
     def _show_md(self, ost, unit, coeff):
         ost.write("|layer|{0}OPS|mread({0}B)|mwrite({0}B)|\n".format(unit))
@@ -90,7 +90,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             ops /= coeff
             mread /= coeff
             mwrite /= coeff
-            ost.write("|{}|{}|{}|\n".format(layer, ops, mread, mwrite))
+            ost.write("|{}|{}|{}|{}|\n".format(layer, ops, mread, mwrite))
 
     def _show_table(self, ost, unit, coeff):
         import texttable
