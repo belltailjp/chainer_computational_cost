@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 from collections import OrderedDict
+import sys
 
 import chainer
 from . import cost_calculators
@@ -50,7 +51,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             print("Warning: {} is not yet supported by "
                   "ComputationalCostHook, ignored".format(label))
 
-    def show_report(self, ost, mode='csv', unit='G'):
+    def show_report(self, ost=sys.stdout, mode='csv', unit='G'):
         if unit not in self._coeff_table:
             raise ValueError("Please specify either None, 'k', 'M', 'G' or 'T'"
                              " to argument `unit`.")
