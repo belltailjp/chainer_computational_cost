@@ -37,6 +37,16 @@ def test_activation_sigmoid():
     assert mwrite == x.size
 
 
+def test_activation_prelu():
+    x = np.random.randn(1, 3, 100, 100).astype(np.float32)
+    W = np.random.randn(3).astype(np.float32)
+    f = F.activation.prelu.PReLUFunction()
+    ops, mread, mwrite = calc_prelu(f, [x, W])
+    assert ops == x.size
+    assert mread == x.size + W.size
+    assert mwrite == x.size
+
+
 def test_max_pooling():     # TODO: implement more test cases
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
     f = F.MaxPooling2D(2, 2, 0, cover_all=True)

@@ -94,8 +94,12 @@ def calc_fixed_bn(function, in_data, **kwargs):
 
 def calc_activation(function, in_data, **kwargs):
     x, = in_data
-    ops = x.size
-    return (ops, ops, ops)
+    return (x.size, x.size, x.size)
+
+
+def calc_prelu(function, in_data, **kwargs):
+    x, W = in_data
+    return (x.size, x.size + W.size, x.size)
 
 
 def calc_reshape(function, in_data, **kwargs):
@@ -164,6 +168,8 @@ calculators = {
     'Convolution2DFunction': calc_conv2d,
     'ReLU': calc_activation,
     'Sigmoid': calc_activation,
+    'LeakyReLU': calc_activation,
+    'PReLU': calc_prelu,
     'FixedBatchNormalization': calc_fixed_bn,
     'Reshape': calc_reshape,
     'MaxPooling2D': calc_max_pooling2d,
