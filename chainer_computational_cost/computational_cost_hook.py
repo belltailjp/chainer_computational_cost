@@ -4,7 +4,8 @@ from collections import OrderedDict
 import sys
 
 import chainer
-from . import cost_calculators
+from chainer_computational_cost.cost_calculators.cost_calculators \
+        import calculators
 
 
 class ComputationalCostHook(chainer.FunctionHook):
@@ -22,8 +23,8 @@ class ComputationalCostHook(chainer.FunctionHook):
 
     def forward_postprocess(self, function, in_data):
         label = function.label
-        if label in cost_calculators.calculators:
-            cal = cost_calculators.calculators[label]
+        if label in calculators:
+            cal = calculators[label]
             res = cal(function, in_data, unify_fma=self._unify_fma)
             ops, mread, mwrite = res
 
