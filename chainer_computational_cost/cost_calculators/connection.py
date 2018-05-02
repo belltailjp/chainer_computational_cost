@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import math
 
 from chainer.utils.conv import get_conv_outsize, get_deconv_outsize

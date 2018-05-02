@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import chainer_computational_cost.cost_calculators
 from chainer_computational_cost.cost_calculators.activation import *
 from chainer_computational_cost.cost_calculators.array import *

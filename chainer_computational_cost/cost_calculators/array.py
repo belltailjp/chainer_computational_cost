@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-
 def calc_reshape(function, in_data, **kwargs):
     size = in_data[0].size
     return (0, 0, 0)
