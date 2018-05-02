@@ -5,6 +5,7 @@ import math
 
 from chainer.utils.conv import get_conv_outsize, get_deconv_outsize
 
+
 def calc_linear(function, in_data, **kwargs):
     x, W = in_data[:2]
     batch_size, in_c = x.shape

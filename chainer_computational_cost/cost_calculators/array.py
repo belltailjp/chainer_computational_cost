@@ -6,7 +6,7 @@ def calc_reshape(function, in_data, **kwargs):
     size = in_data[0].size
     return (0, 0, 0)
 
- 
+
 def calc_concat(function, in_data, **kwargs):
     size = sum([x.size for x in in_data])
     return (0, size, size)

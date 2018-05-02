@@ -3,6 +3,7 @@
 
 from chainer.utils.conv import get_conv_outsize, get_deconv_outsize
 
+
 def calc_max_pooling2d(function, in_data, **kwargs):
     x, = in_data
 
@@ -31,4 +32,3 @@ def calc_average_pooling2d(function, in_data, **kwargs):
     ops = out_size * ((function.kw * function.kh - 1) + 1)
 
     return (ops, x.size, out_size)
-

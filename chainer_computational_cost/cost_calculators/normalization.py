@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 def calc_fixed_bn(function, in_data, **kwargs):
     x, _, _, mean, var = in_data
     x = in_data[0]
