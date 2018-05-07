@@ -1,4 +1,8 @@
-def calc_fixed_bn(function, in_data, **kwargs):
+from chainer.functions.normalization.batch_normalization \
+        import FixedBatchNormalization
+
+
+def calc_fixed_bn(func: FixedBatchNormalization, in_data, **kwargs):
     x, _, _, mean, var = in_data
     x = in_data[0]
     n_elements = len(x.flatten())
