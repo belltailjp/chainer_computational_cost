@@ -3,7 +3,7 @@ import numpy as np
 
 import pytest
 
-from chainer_computational_cost.cost_calculators import *
+from chainer_computational_cost.cost_calculators import calculators
 
 
 def test_fixed_bn():
@@ -13,7 +13,7 @@ def test_fixed_bn():
     mean = np.random.randn(3).astype(np.float32)
     var = np.random.exponential(size=(3,)).astype(np.float32)
     f = F.normalization.batch_normalization.FixedBatchNormalization()
-    ops, mread, mwrite = calc_fixed_bn(f, [x, gamma, beta, mean, var])
+    ops, mread, mwrite = calculators[type(f)](f, [x, gamma, beta, mean, var])
 
     # in test mode BN, gamma, beta, mean and var will eventually become
     # channel-wise scale and shift.

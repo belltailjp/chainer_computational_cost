@@ -3,13 +3,13 @@ import numpy as np
 
 import pytest
 
-from chainer_computational_cost.cost_calculators import *
+from chainer_computational_cost.cost_calculators import calculators
 
 
 def test_reshape():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
     f = F.Reshape((1, -1))
-    ops, mread, mwrite = calc_reshape(f, [x])
+    ops, mread, mwrite = calculators[type(f)](f, [x])
     assert ops == 0
     assert mread == 0
     assert mwrite == 0
@@ -18,7 +18,7 @@ def test_reshape():
 def test_resize():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     f = F.array.resize_images.ResizeImages((15, 15))
-    ops, mread, mwrite = calc_resize(f, [x])
+    ops, mread, mwrite = calculators[type(f)](f, [x])
 
     # linear interpolation (1-dimensional):
     # for each output pixel, bring 2 neighboring pixels,
@@ -37,7 +37,7 @@ def test_resize():
 def test_transpose():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     f = F.array.transpose.Transpose((0, 3, 1, 2))   # typical HWC2CHW transpose
-    ops, mread, mwrite = calc_transpose(f, [x])
+    ops, mread, mwrite = calculators[type(f)](f, [x])
 
     # typical index calc cost: (ndim-1)*2/element
     assert ops == 0
@@ -48,7 +48,7 @@ def test_transpose():
 def test_concat():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     f = F.array.concat.Concat()
-    ops, mread, mwrite = calc_concat(f, [x, x])
+    ops, mread, mwrite = calculators[type(f)](f, [x, x])
 
     assert ops == 0
     assert mread == 2 * (3 * 10 * 10)
@@ -58,7 +58,7 @@ def test_concat():
 def test_concat_more():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     f = F.array.concat.Concat()
-    ops, mread, mwrite = calc_concat(f, [x, x, x, x])
+    ops, mread, mwrite = calculators[type(f)](f, [x, x, x, x])
 
     assert ops == 0
     assert mread == 4 * (3 * 10 * 10)
