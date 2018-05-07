@@ -21,7 +21,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         ])
 
     def forward_postprocess(self, function, in_data):
-        label = function.label
+        label = type(function).__name__
         if type(function) in calculators:
             cal = calculators[type(function)]
             res = cal(function, in_data, unify_fma=self._unify_fma)
