@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from collections import OrderedDict
 import sys
+import traceback
 
 import chainer
 from chainer_computational_cost.cost_calculators import calculators
@@ -35,12 +36,19 @@ class ComputationalCostHook(chainer.FunctionHook):
             if label not in self._label_count:
                 self._label_count[label] = 0
 
+            # get stack trace
+            tb = traceback.extract_stack()
+            tb = tb[:-2]   # ignore first 2 items; extract_stack and this hook
+            tb = traceback.format_list(tb)
+            tb = ''.join(tb)
+
             name = '{}-{}'.format(label, self._label_count[label])
             self._label_count[label] += 1
             self.report[name] = {
                 'ops': ops,
                 'mread': mread,
-                'mwrite': mwrite
+                'mwrite': mwrite,
+                'traceback': tb.strip()
             }
             report_total = self.report['total']
             report_total['ops'] += ops
