@@ -22,6 +22,9 @@ class ComputationalCostHook(chainer.FunctionHook):
         ])
 
     def forward_postprocess(self, function, in_data):
+        if type(function) is chainer.function.FunctionAdapter:
+            function = function._function
+
         label = type(function).__name__
         if type(function) in calculators:
             cal = calculators[type(function)]
