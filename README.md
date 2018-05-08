@@ -4,6 +4,7 @@ This is a tool to estimate theoretical computational cost of a chainer-based neu
 
 ## Requirements
 
+* python >= 3
 * chainer >= 4.0.0
 
 
@@ -114,6 +115,77 @@ Also, the following unit prefixes are supported by `unit` argument.
 * `T`: 10^12
 
 The prefix will affect to both OPS, and memory report.
+
+
+### Access to the detailed report
+
+Once you let `cost` gather the computational costs as explained above,
+you can access to the report information directly.
+
+```python
+>>> cost.report
+```
+
+It is a huge dictionary whose structure is:
+
+```
+{
+  'Layer-0':{
+    {
+      "type": "Convolution2DFunction",
+      "ops": 1850490880,
+      "mread": 5571584,
+      "mwrite": 3211264,
+      "traceback": (stack trace string of the layer)
+  },
+  ...
+  "total": {
+    "type": "",
+    "ops": 15502118376,
+    "mread": 669803680,
+    "mwrite": 115173280
+  }
+}
+```
+
+
+### Custom cost calculator for non-supported layer types
+
+Layer types supported are listed in the next section.
+
+In case you need an unsupported layer or you have your custom layer,
+you can insert a cost calculator.
+
+```python
+def custom_calculator(func: F.math.basic_math.Add, in_data, **kwargs)
+    ...
+    return (0, 0, 0)
+
+with chainer.no_backprop_mode(), chainer.using_config('train', False):
+    with ComputationalCostHook(unify_fma=True) as cost:
+        cost.add_custom_cost_calculator(custom_calculator)
+        y = x + x   # Call Add
+
+        cost.report['Add-0']    # you can find custom estimation result
+```
+
+Custom cost calculator has to have the following signature.
+* First positional argument
+  * Name: `func`
+  * Type annotation is required.
+    Specify proper type which you want to calculate by the function.
+    Type should be a subclass of `FunctionNode`.
+* Second positional argument
+  * Name: `in_data`
+  * List of data (could be `numpy.array`, `cupy.array` or a scalar) will be fed
+* Third keyword argument
+  * Name: `**kwargs`
+  * Some flags will be fed
+    * `unify_fma: bool`, for example
+
+For more details about how to implement custom cost calculator,
+please refer existing implementations located in
+`chainer_computational_cost/cost_calculators/*.py`.
 
 
 ### Supported functions
