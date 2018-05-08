@@ -36,4 +36,9 @@ for full_py in calc_pys:
                   .format(func_name, sig))
             continue
 
-        calculators[p['func'].annotation] = func
+        annot = p['func'].annotation
+        if annot in calculators:
+            old_name = calculators[annot].__name__
+            print("Warning: cost calculator for {} already exists ({}). "
+                  "Replace by {}".format(annot.__name__, old_name, func_name))
+        calculators[annot] = func
