@@ -14,9 +14,9 @@ def calc_average_pooling2d(func: AveragePooling2D, in_data, **kwargs):
                              cover_all=func.cover_all)
 
     out_size = (batch_size * in_c * out_h * out_w)
-    ops = out_size * ((func.kw * func.kh - 1) + 1)
+    flops = out_size * ((func.kw * func.kh - 1) + 1)
 
-    return (ops, x.size, out_size)
+    return (flops, x.size, out_size)
 
 
 def calc_max_pooling2d(func: MaxPooling2D, in_data, **kwargs):
@@ -29,6 +29,6 @@ def calc_max_pooling2d(func: MaxPooling2D, in_data, **kwargs):
                              cover_all=func.cover_all)
 
     out_size = (batch_size * in_c * out_h * out_w)
-    ops = out_size * (func.kw * func.kh - 1)
+    flops = out_size * (func.kw * func.kh - 1)
 
-    return (ops, x.size, out_size)
+    return (flops, x.size, out_size)
