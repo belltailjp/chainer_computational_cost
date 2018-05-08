@@ -211,3 +211,26 @@ please refer existing implementations located in
   * FixedBatchNormalization
 
 
+## Contribution Guide
+
+### Coding standard
+
+Following the [Chainer contribution guide](https://docs.chainer.org/en/stable/contribution.html),
+chainer-computational-cost also requires flake8 and hacking.
+
+```python
+% pip install hacking flake8
+% flake8 .
+```
+
+
+### Testing
+
+We use pytest for unit-testing.
+Please write sufficient test cases when you support new functions
+or implement a new feataure.
+
+```python
+% pip install pytest
+% python -m pytest
+```
