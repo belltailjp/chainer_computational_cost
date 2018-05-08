@@ -45,15 +45,16 @@ class ComputationalCostHook(chainer.FunctionHook):
     def forward_postprocess(self, function, in_data):
         if type(function) is chainer.function.FunctionAdapter:
             function = function._function
-        label = type(function).__name__
 
-        if type(function) in self._custom_cost_calculators:
-            cal = self._custom_cost_calculators[type(function)]
-        elif type(function) in calculators:
-            cal = calculators[type(function)]
+        func_type = type(function)
+        if func_type in self._custom_cost_calculators:
+            cal = self._custom_cost_calculators[func_type]
+        elif func_type in calculators:
+            cal = calculators[func_type]
         else:
+            fqn = self._get_fqn(func_type)
             print("Warning: {} is not yet supported by "
-                  "ComputationalCostHook, ignored".format(label))
+                  "ComputationalCostHook, ignored".format(fqn))
             return
 
         res = cal(function, in_data, unify_fma=self._unify_fma)
@@ -70,6 +71,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         tb = traceback.format_list(tb)
         tb = ''.join(tb)
 
+        label = func_type.__name__
         if label not in self._label_count:
             self._label_count[label] = 0
         self._label_count[label] += 1
@@ -90,6 +92,9 @@ class ComputationalCostHook(chainer.FunctionHook):
             report['ops'] += ops
             report['mread'] += mread
             report['mwrite'] += mwrite
+
+    def _get_fqn(self, func_type):
+        return "{}.{}".format(func_type.__module__, func_type.__name__)
 
     def show_report(self, dst=sys.stdout, mode='csv', unit='G', summary=False):
         if unit not in self._coeff_table:
