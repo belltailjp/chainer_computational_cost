@@ -45,6 +45,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             name = '{}-{}'.format(label, self._label_count[label])
             self._label_count[label] += 1
             self.report[name] = {
+                'type': label,
                 'ops': ops,
                 'mread': mread,
                 'mwrite': mwrite,
