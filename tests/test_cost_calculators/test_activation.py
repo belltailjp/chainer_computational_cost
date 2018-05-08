@@ -32,3 +32,13 @@ def test_activation_prelu():
     assert ops == x.size
     assert mread == x.size + W.size
     assert mwrite == x.size
+
+
+def test_softmax():
+    x = np.random.randn(1, 100).astype(np.float32)
+    f = F.activation.softmax.Softmax()
+    ops, mread, mwrite = calculators[type(f)](f, [x])
+    # ops: exp term, sum term, div term
+    assert ops == x.size + (x.size - 1) + x.size
+    assert mread == x.size
+    assert mwrite == x.size
