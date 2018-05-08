@@ -8,8 +8,8 @@ def test_activation_prelu():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
     W = np.random.randn(3).astype(np.float32)
     f = F.activation.prelu.PReLUFunction()
-    ops, mread, mwrite = calculators[type(f)](f, [x, W])
-    assert ops == x.size
+    flops, mread, mwrite = calculators[type(f)](f, [x, W])
+    assert flops == x.size
     assert mread == x.size + W.size
     assert mwrite == x.size
 
@@ -17,8 +17,8 @@ def test_activation_prelu():
 def test_activation_relu():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
     f = F.ReLU()
-    ops, mread, mwrite = calculators[type(f)](f, [x])
-    assert ops == x.size
+    flops, mread, mwrite = calculators[type(f)](f, [x])
+    assert flops == x.size
     assert mread == x.size
     assert mwrite == x.size
 
@@ -26,8 +26,8 @@ def test_activation_relu():
 def test_activation_sigmoid():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
     f = F.Sigmoid()
-    ops, mread, mwrite = calculators[type(f)](f, [x])
-    assert ops == x.size
+    flops, mread, mwrite = calculators[type(f)](f, [x])
+    assert flops == x.size
     assert mread == x.size
     assert mwrite == x.size
 
@@ -35,8 +35,8 @@ def test_activation_sigmoid():
 def test_softmax():
     x = np.random.randn(1, 100).astype(np.float32)
     f = F.activation.softmax.Softmax()
-    ops, mread, mwrite = calculators[type(f)](f, [x])
-    # ops: exp term, sum term, div term
-    assert ops == x.size + (x.size - 1) + x.size
+    flops, mread, mwrite = calculators[type(f)](f, [x])
+    # flops: exp term, sum term, div term
+    assert flops == x.size + (x.size - 1) + x.size
     assert mread == x.size
     assert mwrite == x.size

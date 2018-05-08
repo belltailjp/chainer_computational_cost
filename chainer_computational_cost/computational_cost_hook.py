@@ -58,7 +58,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             return
 
         res = cal(function, in_data, unify_fma=self._unify_fma)
-        ops, mread, mwrite = res
+        flops, mread, mwrite = res
 
         # to bytes
         itemsize = in_data[0].dtype.itemsize
@@ -79,7 +79,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         name = '{}-{}'.format(label, self._label_count[label])
         self.layer_report[name] = {
             'type': label,
-            'ops': ops,
+            'flops': flops,
             'mread': mread,
             'mwrite': mwrite,
             'traceback': tb.strip()
@@ -87,9 +87,11 @@ class ComputationalCostHook(chainer.FunctionHook):
 
         for name in ('total', label):
             if name not in self.summary_report:
-                self.summary_report[name] = {'ops': 0, 'mread': 0, 'mwrite': 0}
+                self.summary_report[name] = {
+                    'flops': 0, 'mread': 0, 'mwrite': 0
+                }
             report = self.summary_report[name]
-            report['ops'] += ops
+            report['flops'] += flops
             report['mread'] += mread
             report['mwrite'] += mwrite
 
@@ -124,36 +126,36 @@ class ComputationalCostHook(chainer.FunctionHook):
                              " argument `mode`")
 
     def _show_csv(self, report, ost, unit, coeff):
-        ost.write("layer,{0}OPS,mread({0}B),mwrite({0}B)\n".format(unit))
+        ost.write("layer,{0}FLOPs,mread({0}B),mwrite({0}B)\n".format(unit))
         for layer, rep in report.items():
-            ops, mread, mwrite = rep['ops'], rep['mread'], rep['mwrite']
-            ops /= coeff
+            flops, mread, mwrite = rep['flops'], rep['mread'], rep['mwrite']
+            flops /= coeff
             mread /= coeff
             mwrite /= coeff
-            ost.write("{},{},{},{}\n".format(layer, ops, mread, mwrite))
+            ost.write("{},{},{},{}\n".format(layer, flops, mread, mwrite))
 
     def _show_md(self, report, ost, unit, coeff):
-        ost.write("|layer|{0}OPS|mread({0}B)|mwrite({0}B)|\n".format(unit))
+        ost.write("|layer|{0}FLOPs|mread({0}B)|mwrite({0}B)|\n".format(unit))
         ost.write("|:----|:----|:----|:----|\n")
         for layer, rep in report.items():
-            ops, mread, mwrite = rep['ops'], rep['mread'], rep['mwrite']
-            ops /= coeff
+            flops, mread, mwrite = rep['flops'], rep['mread'], rep['mwrite']
+            flops /= coeff
             mread /= coeff
             mwrite /= coeff
-            ost.write("|{}|{}|{}|{}|\n".format(layer, ops, mread, mwrite))
+            ost.write("|{}|{}|{}|{}|\n".format(layer, flops, mread, mwrite))
 
     def _show_table(self, report, ost, unit, coeff):
         import texttable
         table = texttable.Texttable()
 
-        rows = [['layer', '{}OPS'.format(unit),
+        rows = [['layer', '{}FLOPs'.format(unit),
                  'mread({}B)'.format(unit), 'mwrite({}B)'.format(unit)]]
         for layer, rep in report.items():
-            ops, mread, mwrite = rep['ops'], rep['mread'], rep['mwrite']
+            flops, mread, mwrite = rep['flops'], rep['mread'], rep['mwrite']
             if coeff != 1:
-                ops /= coeff
+                flops /= coeff
                 mread /= coeff
                 mwrite /= coeff
-            rows.append([layer, str(ops), str(mread), str(mwrite)])
+            rows.append([layer, str(flops), str(mread), str(mwrite)])
         table.add_rows(rows)
         ost.write(table.draw() + '\n')

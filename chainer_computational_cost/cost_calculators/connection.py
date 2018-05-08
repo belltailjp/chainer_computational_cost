@@ -24,17 +24,17 @@ def calc_conv2d(func: Convolution2DFunction, in_data, **kwargs):
     out_w = get_conv_outsize(in_w, kw, func.sx, func.pw,
                              cover_all=func.cover_all, d=func.dx)
 
-    ops = in_c * int(math.ceil(out_c / g)) * kw * kh * out_w * out_h
+    flops = in_c * int(math.ceil(out_c / g)) * kw * kh * out_w * out_h
     if not kwargs['unify_fma']:
-        ops *= 2
+        flops *= 2
 
     mread = x.size + W.size
     mwrite = batch_size * out_c * out_h * out_w
     if b is not None:
-        ops += batch_size * out_c * out_w * out_h
+        flops += batch_size * out_c * out_w * out_h
         mread += b.size
 
-    return (ops * batch_size, mread, mwrite)
+    return (flops * batch_size, mread, mwrite)
 
 
 def calc_deconv2d(func: Deconvolution2DFunction, in_data, **kwargs):
@@ -50,17 +50,17 @@ def calc_deconv2d(func: Deconvolution2DFunction, in_data, **kwargs):
     out_w = get_deconv_outsize(in_w, kw, func.sx,
                                func.pw, d=func.dx)
 
-    ops = in_c * int(math.ceil(out_c / g)) * kw * kh * in_w * in_h
+    flops = in_c * int(math.ceil(out_c / g)) * kw * kh * in_w * in_h
     if not kwargs['unify_fma']:
-        ops *= 2
+        flops *= 2
 
     mread = x.size + W.size
     mwrite = batch_size * out_c * out_h * out_w
     if b is not None:
-        ops += batch_size * out_c * out_w * out_h
+        flops += batch_size * out_c * out_w * out_h
         mread += b.size
 
-    return (ops * batch_size, mread, mwrite)
+    return (flops * batch_size, mread, mwrite)
 
 
 def calc_linear(func: LinearFunction, in_data, **kwargs):
@@ -69,19 +69,19 @@ def calc_linear(func: LinearFunction, in_data, **kwargs):
     out_c, _ = W.shape
 
     if kwargs['unify_fma']:
-        ops = batch_size * in_c * out_c
+        flops = batch_size * in_c * out_c
     else:
-        ops = batch_size * (in_c + in_c - 1) * out_c
+        flops = batch_size * (in_c + in_c - 1) * out_c
 
     mread = x.size + W.size
     mwrite = out_c
 
     if len(in_data) == 3:
         b = in_data[2]
-        ops += b.size
+        flops += b.size
         mread += b.size
 
-    return (ops, mread, mwrite)
+    return (flops, mread, mwrite)
 
 
 def calc_shift(func: Shift, in_data, **kwargs):

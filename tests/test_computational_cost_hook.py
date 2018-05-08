@@ -55,11 +55,11 @@ def test_custom_cost_calculator():
         with chainer_computational_cost.ComputationalCostHook() as cost:
             cost.add_custom_cost_calculator(calc_custom)
             x = x + 1
-            report = cost.report
+            report = cost.layer_report
 
     report = report['AddConstant-1']
     assert called is True
-    assert report['ops'] == 100
+    assert report['flops'] == 100
     assert report['mread'] == 100 * x.dtype.itemsize
     assert report['mwrite'] == 100 * x.dtype.itemsize
 
