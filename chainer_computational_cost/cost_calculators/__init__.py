@@ -9,6 +9,20 @@ import importlib
 import os
 import inspect
 
+
+def _check_sig(p):
+    if len(p) != 3 or list(p.keys()) != ['func', 'in_data', 'kwargs']:
+        return False
+
+    if p['func'].annotation == inspect._empty:
+        return False
+
+    if p['kwargs'].kind != inspect.Parameter.VAR_KEYWORD:
+        return False
+
+    return True
+
+
 calculators = dict()
 
 calc_pys = glob.glob(os.path.join(os.path.dirname(__file__), '*.py'))
@@ -23,14 +37,9 @@ for full_py in calc_pys:
 
     for func_name in func_names:
         func = getattr(m, func_name)
-        s = inspect.signature(func)
-        p = s.parameters
+        p = inspect.signature(func).parameters
 
-        # check signature
-        if len(p) != 3 \
-           or list(p.keys()) != ['func', 'in_data', 'kwargs'] \
-           or p['func'].annotation == inspect._empty \
-           or p['kwargs'].kind != inspect.Parameter.VAR_KEYWORD:
+        if not _check_sig(p):
             sig = inspect.formatargspec(*inspect.getfullargspec(func))
             print("Warning: cost calculator signature mismatch: {}{}"
                   .format(func_name, sig))

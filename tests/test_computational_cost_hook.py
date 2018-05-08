@@ -1,8 +1,9 @@
-import unittest
+import pytest
 
 import chainer
 import chainer.functions as F
 import chainer.links as L
+from chainer.functions.math.basic_math import AddConstant
 import numpy as np
 
 import chainer_computational_cost
@@ -38,3 +39,39 @@ def test_simple_net():
     with chainer.using_config('train', False):
         with chainer_computational_cost.ComputationalCostHook() as cost:
             net(x)
+
+
+def test_custom_cost_calculator():
+    called = False
+
+    def calc_custom(func: AddConstant, in_data, **kwargs):
+        nonlocal called
+        called = True
+        return (100, 100, 100)
+
+    x = np.random.randn(1, 3, 32, 32).astype(np.float32)
+    x = chainer.Variable(x)
+    with chainer.using_config('train', False):
+        with chainer_computational_cost.ComputationalCostHook() as cost:
+            cost.add_custom_cost_calculator(calc_custom)
+            x = x + 1
+            report = cost.report
+
+    report = report['AddConstant-1']
+    assert called is True
+    assert report['ops'] == 100
+    assert report['mread'] == 100 * x.dtype.itemsize
+    assert report['mwrite'] == 100 * x.dtype.itemsize
+
+
+def test_custom_cost_calculator_invalid():
+    def calc_invalid_custom(func, in_data, **kwargs):
+        pass
+
+    x = np.random.randn(1, 3, 32, 32).astype(np.float32)
+    x = chainer.Variable(x)
+    with chainer.using_config('train', False):
+        with chainer_computational_cost.ComputationalCostHook() as cost:
+            with pytest.raises(TypeError):
+                cost.add_custom_cost_calculator(calc_invalid_custom)
+                x = x + 1
