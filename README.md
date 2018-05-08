@@ -1,6 +1,18 @@
 # chainer-computational-cost
 
-This is a tool to estimate theoretical computational cost of a chainer-based neural network.
+This is a tool to estimate theoretical computational cost
+of a chainer-based neural network.
+
+You can analyze
+
+* Theoretical amount of floating point arithmetics (FLOPs)
+* Theoretical amount of memory read and write (mread/mwrite)
+
+For each layer.
+
+Also, summary of these computational costs for each layer-type,
+and total cost can be calculated.
+
 
 ## Requirements
 
@@ -34,7 +46,7 @@ with chainer.no_backprop_mode(), chainer.using_config('train', False):
 It will show the following table to stdout.
 
 
-|layer|GOPS|mread(GB)|mwrite(GB)|
+|layer|GFLOPs|mread(GB)|mwrite(GB)|
 |:----|:----|:----|:----|
 |AddConstant-1|0.000150528|0.001204224|0.000602112|
 |Convolution2DFunction-1|0.089915392|0.00060928|0.012845056|
@@ -81,7 +93,7 @@ It will show the following table to stdout.
 If you specify `summary=True` to `show_report`,
 it will show summary for each type of layer.
 
-|layer|GOPS|mread(GB)|mwrite(GB)|
+|layer|GFLOPs|mread(GB)|mwrite(GB)|
 |:----|:----|:----|:----|
 |AddConstant|0.000150528|0.001204224|0.000602112|
 |Convolution2DFunction|15.360178176|0.095186176|0.05419008|
@@ -132,7 +144,7 @@ Also, the following unit prefixes are supported by `unit` argument.
 * `G`: 10^9
 * `T`: 10^12
 
-The prefix will affect to both OPS, and memory report.
+The prefix will affect to both FLOPs, and memory report.
 
 
 ### Access to the detailed report
@@ -151,7 +163,7 @@ It is a huge dictionary whose structure is:
   'Layer-0': {
     {
       "type": "Convolution2DFunction",
-      "ops": 1850490880,
+      "flops": 1850490880,
       "mread": 5571584,
       "mwrite": 3211264,
       "traceback": (stack trace string of the layer)
@@ -167,12 +179,12 @@ This contains total costs for each type of layers
 >>> cost.summary_report
 {
   "total": {
-    "ops": 15502121375,
+    "flops": 15502121375,
     "mread": 669807680,
     "mwrite": 115177280
   },
   "AddConstant": {
-    "ops": 150528,
+    "flops": 150528,
     "mread": 1204224,
     "mwrite": 602112
   },
