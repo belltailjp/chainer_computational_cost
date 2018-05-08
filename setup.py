@@ -6,7 +6,8 @@ setup(name='chainer-computational-cost',
       author='Daichi SUZUO',
       author_email='suzuo@preferred.jp',
       packages=[
-          'chainer_computational_cost'
+          'chainer_computational_cost',
+          'chainer_computational_cost.cost_calculators'
       ],
       test_require=[
           'pytest>=3.0.0'
