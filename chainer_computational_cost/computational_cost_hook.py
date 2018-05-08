@@ -6,7 +6,8 @@ import sys
 import traceback
 
 import chainer
-from chainer_computational_cost.cost_calculators import calculators, _check_sig
+from chainer_computational_cost.cost_calculators import _check_sig
+from chainer_computational_cost.cost_calculators import calculators
 
 
 class ComputationalCostHook(chainer.FunctionHook):

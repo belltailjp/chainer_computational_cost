@@ -1,2 +1,1 @@
-from chainer_computational_cost.computational_cost_hook \
-        import ComputationalCostHook
+from .computational_cost_hook import ComputationalCostHook    # NOQA

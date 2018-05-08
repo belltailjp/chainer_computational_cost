@@ -1,8 +1,6 @@
 import chainer.functions as F
 import numpy as np
 
-import pytest
-
 from chainer_computational_cost.cost_calculators import calculators
 
 

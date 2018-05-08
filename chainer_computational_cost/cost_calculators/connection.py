@@ -1,34 +1,14 @@
 import math
 
 from chainer.functions.connection.convolution_2d \
-        import Convolution2DFunction
+    import Convolution2DFunction
 from chainer.functions.connection.deconvolution_2d \
-        import Deconvolution2DFunction
+    import Deconvolution2DFunction
 from chainer.functions.connection.linear import LinearFunction
 from chainer.functions.connection.shift import Shift
 
-from chainer.utils.conv import get_conv_outsize, get_deconv_outsize
-
-
-def calc_linear(func: LinearFunction, in_data, **kwargs):
-    x, W = in_data[:2]
-    batch_size, in_c = x.shape
-    out_c, _ = W.shape
-
-    if kwargs['unify_fma']:
-        ops = batch_size * in_c * out_c
-    else:
-        ops = batch_size * (in_c + in_c - 1) * out_c
-
-    mread = x.size + W.size
-    mwrite = out_c
-
-    if len(in_data) == 3:
-        b = in_data[2]
-        ops += b.size
-        mread += b.size
-
-    return (ops, mread, mwrite)
+from chainer.utils.conv import get_conv_outsize
+from chainer.utils.conv import get_deconv_outsize
 
 
 def calc_conv2d(func: Convolution2DFunction, in_data, **kwargs):
@@ -81,6 +61,27 @@ def calc_deconv2d(func: Deconvolution2DFunction, in_data, **kwargs):
         mread += b.size
 
     return (ops * batch_size, mread, mwrite)
+
+
+def calc_linear(func: LinearFunction, in_data, **kwargs):
+    x, W = in_data[:2]
+    batch_size, in_c = x.shape
+    out_c, _ = W.shape
+
+    if kwargs['unify_fma']:
+        ops = batch_size * in_c * out_c
+    else:
+        ops = batch_size * (in_c + in_c - 1) * out_c
+
+    mread = x.size + W.size
+    mwrite = out_c
+
+    if len(in_data) == 3:
+        b = in_data[2]
+        ops += b.size
+        mread += b.size
+
+    return (ops, mread, mwrite)
 
 
 def calc_shift(func: Shift, in_data, **kwargs):

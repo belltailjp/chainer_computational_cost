@@ -4,14 +4,13 @@ from chainer.functions.array.resize_images import ResizeImages
 from chainer.functions.array.transpose import Transpose
 
 
-def calc_reshape(func: Reshape, in_data, **kwargs):
-    size = in_data[0].size
-    return (0, 0, 0)
-
-
 def calc_concat(func: Concat, in_data, **kwargs):
     size = sum([x.size for x in in_data])
     return (0, size, size)
+
+
+def calc_reshape(func: Reshape, in_data, **kwargs):
+    return (0, 0, 0)
 
 
 def calc_resize(func: ResizeImages, in_data, **kwargs):

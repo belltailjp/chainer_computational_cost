@@ -1,7 +1,7 @@
 from chainer.functions.normalization.batch_normalization \
-        import FixedBatchNormalization
+    import FixedBatchNormalization
 from chainer.functions.normalization.local_response_normalization \
-        import LocalResponseNormalization
+    import LocalResponseNormalization
 
 
 def calc_fixed_bn(func: FixedBatchNormalization, in_data, **kwargs):

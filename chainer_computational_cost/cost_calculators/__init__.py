@@ -6,8 +6,8 @@ It automatically finds all the cost calculation methods whose signature is
 
 import glob
 import importlib
-import os
 import inspect
+import os
 
 
 def _check_sig(p):

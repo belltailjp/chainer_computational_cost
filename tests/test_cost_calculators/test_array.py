@@ -1,9 +1,27 @@
 import chainer.functions as F
 import numpy as np
 
-import pytest
-
 from chainer_computational_cost.cost_calculators import calculators
+
+
+def test_concat():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.array.concat.Concat()
+    ops, mread, mwrite = calculators[type(f)](f, [x, x])
+
+    assert ops == 0
+    assert mread == 2 * (3 * 10 * 10)
+    assert mwrite == 2 * (3 * 10 * 10)
+
+
+def test_concat_more():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.array.concat.Concat()
+    ops, mread, mwrite = calculators[type(f)](f, [x, x, x, x])
+
+    assert ops == 0
+    assert mread == 4 * (3 * 10 * 10)
+    assert mwrite == 4 * (3 * 10 * 10)
 
 
 def test_reshape():
@@ -43,23 +61,3 @@ def test_transpose():
     assert ops == 0
     assert mread == 3 * 10 * 10
     assert mwrite == 3 * 10 * 10
-
-
-def test_concat():
-    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
-    f = F.array.concat.Concat()
-    ops, mread, mwrite = calculators[type(f)](f, [x, x])
-
-    assert ops == 0
-    assert mread == 2 * (3 * 10 * 10)
-    assert mwrite == 2 * (3 * 10 * 10)
-
-
-def test_concat_more():
-    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
-    f = F.array.concat.Concat()
-    ops, mread, mwrite = calculators[type(f)](f, [x, x, x, x])
-
-    assert ops == 0
-    assert mread == 4 * (3 * 10 * 10)
-    assert mwrite == 4 * (3 * 10 * 10)

@@ -1,8 +1,6 @@
 import chainer.functions.normalization as N
 import numpy as np
 
-import pytest
-
 from chainer_computational_cost.cost_calculators import calculators
 
 
@@ -22,7 +20,7 @@ def test_fixed_bn():
     assert mwrite == 3 * 10 * 10
 
 
-def test_lrn():     # TODO: verify formula
+def test_lrn():     # TODO(belltailjp): verify formula
     x = np.random.randn(1, 8, 10, 10).astype(np.float32)
     f = N.local_response_normalization.LocalResponseNormalization()
     ops, mread, mwrite = calculators[type(f)](f, [x])

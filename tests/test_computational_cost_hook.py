@@ -1,10 +1,10 @@
-import pytest
-
 import chainer
 import chainer.functions as F
-import chainer.links as L
 from chainer.functions.math.basic_math import AddConstant
+import chainer.links as L
 import numpy as np
+
+import pytest
 
 import chainer_computational_cost
 
@@ -37,7 +37,7 @@ def test_simple_net():
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
     net = SimpleConvNet()
     with chainer.using_config('train', False):
-        with chainer_computational_cost.ComputationalCostHook() as cost:
+        with chainer_computational_cost.ComputationalCostHook():
             net(x)
 
 

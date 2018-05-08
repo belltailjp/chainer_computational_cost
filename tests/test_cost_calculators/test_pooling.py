@@ -1,12 +1,10 @@
 import chainer.functions as F
 import numpy as np
 
-import pytest
-
 from chainer_computational_cost.cost_calculators import calculators
 
 
-def test_max_pooling():     # TODO: implement more test cases
+def test_max_pooling():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
     f = F.MaxPooling2D(2, 2, 0, cover_all=True)
     ops, mread, mwrite = calculators[type(f)](f, [x])

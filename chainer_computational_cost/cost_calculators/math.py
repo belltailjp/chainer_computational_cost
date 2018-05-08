@@ -1,7 +1,12 @@
 import chainer.cuda
-from chainer.functions.math.basic_math import Add, Sub, Mul, Div
-from chainer.functions.math.basic_math \
-        import AddConstant, SubFromConstant, MulConstant, DivFromConstant
+from chainer.functions.math.basic_math import Add
+from chainer.functions.math.basic_math import AddConstant
+from chainer.functions.math.basic_math import Div
+from chainer.functions.math.basic_math import DivFromConstant
+from chainer.functions.math.basic_math import Mul
+from chainer.functions.math.basic_math import MulConstant
+from chainer.functions.math.basic_math import Sub
+from chainer.functions.math.basic_math import SubFromConstant
 
 
 def _calc(func, in_data, **kwargs):
@@ -22,11 +27,11 @@ def calc_add_constant(func: AddConstant, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
-def calc_sub(func: Sub, in_data, **kwargs):
+def calc_div(func: Div, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
-def calc_sub_from_constant(func: SubFromConstant, in_data, **kwargs):
+def calc_div_from_constant(func: DivFromConstant, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
@@ -38,9 +43,9 @@ def calc_mul_constant(func: MulConstant, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
-def calc_div(func: Div, in_data, **kwargs):
+def calc_sub(func: Sub, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
-def calc_div_from_constant(func: DivFromConstant, in_data, **kwargs):
+def calc_sub_from_constant(func: SubFromConstant, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
