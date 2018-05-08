@@ -110,7 +110,7 @@ class ComputationalCostHook(chainer.FunctionHook):
 
         if mode == 'csv':
             self._show_csv(report, dst, unit, coeff)
-        if mode == 'md':
+        elif mode == 'md':
             self._show_md(report, dst, unit, coeff)
         elif mode == 'table':
             self._show_table(report, dst, unit, coeff)
