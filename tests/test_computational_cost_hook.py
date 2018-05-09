@@ -62,6 +62,7 @@ def test_custom_cost_calculator():
     assert report['flops'] == 100
     assert report['mread'] == 100 * x.dtype.itemsize
     assert report['mwrite'] == 100 * x.dtype.itemsize
+    assert report['mrw'] == report['mread'] + report['mwrite']
 
 
 def test_custom_cost_calculator_invalid():
