@@ -238,6 +238,32 @@ e.g. there is an inference engine that doesn't support inplace `Reshape`,
 whose `mread` and `mwrite` won't be 0.
 
 
+If a layer not supported by chainer_computational_cost is used,
+it shows a message like
+`Warning: XXXFunction is not yet supported by ComputationalCostHook, ignored`.
+
+Also, you can access to which layers are ignored.
+
+```python
+with ComputationalCostHook() as cost:
+  ...
+  print(cost.ignored_layers)
+```
+
+It has the following structure.
+
+```
+{
+  'XXXFunction':
+  {
+    'type': 'XXXFunction',
+    'traceback': '(traceback)'
+  },
+  ...
+}
+```
+
+
 ### Supported functions
 
 * Activation
