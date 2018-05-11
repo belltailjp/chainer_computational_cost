@@ -24,6 +24,7 @@ class ComputationalCostHook(chainer.FunctionHook):
 
         self.layer_report = OrderedDict()
         self.summary_report = OrderedDict()
+        self.ignored_layers = OrderedDict()
 
     def add_custom_cost_calculator(self, calculator):
         p = inspect.signature(calculator).parameters
@@ -42,11 +43,29 @@ class ComputationalCostHook(chainer.FunctionHook):
 
         self._custom_cost_calculators[func_type] = calculator
 
+    def _get_func_name_and_label(self, func_type):
+        label = func_type.__name__
+        if label not in self._label_count:
+            self._label_count[label] = 0
+        self._label_count[label] += 1
+
+        name = '{}-{}'.format(label, self._label_count[label])
+        return (label, name)
+
+    def _get_stack_trace(self, ignore_depth=3):
+        # ignore first 3 items;
+        # extract_stack, forward_postprocess and _get_stack_trace
+        tb = traceback.extract_stack()[:-ignore_depth]
+        tb = traceback.format_list(tb)
+        return ''.join(tb).strip()
+
     def forward_postprocess(self, function, in_data):
         if type(function) is chainer.function.FunctionAdapter:
             function = function._function
 
         func_type = type(function)
+        label, name = self._get_func_name_and_label(func_type)
+
         if func_type in self._custom_cost_calculators:
             cal = self._custom_cost_calculators[func_type]
         elif func_type in calculators:
@@ -55,6 +74,10 @@ class ComputationalCostHook(chainer.FunctionHook):
             fqn = self._get_fqn(func_type)
             print("Warning: {} is not yet supported by "
                   "ComputationalCostHook, ignored".format(fqn))
+            self.ignored_layers[name] = {
+                'type': label,
+                'traceback': self._get_stack_trace()
+            }
             return
 
         res = cal(function, in_data, unify_fma=self._unify_fma)
@@ -65,25 +88,13 @@ class ComputationalCostHook(chainer.FunctionHook):
         mread *= itemsize
         mwrite *= itemsize
 
-        # get stack trace
-        tb = traceback.extract_stack()
-        tb = tb[:-2]   # ignore first 2 items; extract_stack and this hook
-        tb = traceback.format_list(tb)
-        tb = ''.join(tb)
-
-        label = func_type.__name__
-        if label not in self._label_count:
-            self._label_count[label] = 0
-        self._label_count[label] += 1
-
-        name = '{}-{}'.format(label, self._label_count[label])
         self.layer_report[name] = {
             'type': label,
             'flops': flops,
             'mread': mread,
             'mwrite': mwrite,
             'mrw': mread + mwrite,
-            'traceback': tb.strip()
+            'traceback': self._get_stack_trace()
         }
 
         for name in ('total', label):
