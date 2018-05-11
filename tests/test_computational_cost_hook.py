@@ -76,3 +76,20 @@ def test_custom_cost_calculator_invalid():
             with pytest.raises(TypeError):
                 cost.add_custom_cost_calculator(calc_invalid_custom)
                 x = x + 1
+
+
+def test_report_ignored_layer():
+    class DummyFunc(chainer.function_node.FunctionNode):
+
+        def forward(self, xs):
+            return xs
+
+        def backward(self, indices, gys):
+            return gys
+
+    x = np.random.randn(1, 3, 32, 32).astype(np.float32)
+    with chainer_computational_cost.ComputationalCostHook() as cost:
+        DummyFunc().apply(x)
+        assert len(cost.ignored_layers) == 1
+        assert 'DummyFunc' in list(cost.ignored_layers.keys())[0]
+        assert 'DummyFunc' == list(cost.ignored_layers.values())[0]['type']
