@@ -14,9 +14,9 @@ def _calc(func, in_data, **kwargs):
     if hasattr(func, 'value'):  # if constant
         # to support both scalar and eltw op
         s = chainer.cuda.get_array_module(x).size(x)
-        return (x.size, x.size + s, x.size)
+        return (x.size, x.size + s, x.size, {})
     else:
-        return (x.size, x.size * 2, x.size)
+        return (x.size, x.size * 2, x.size, {})
 
 
 def calc_add(func: Add, in_data, **kwargs):

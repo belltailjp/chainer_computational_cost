@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import chainer
 import chainer.functions as F
 from chainer.functions.math.basic_math import AddConstant
@@ -37,8 +39,43 @@ def test_simple_net():
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
     net = SimpleConvNet()
     with chainer.using_config('train', False):
-        with chainer_computational_cost.ComputationalCostHook():
+        with chainer_computational_cost.ComputationalCostHook() as cost:
             net(x)
+            assert type(cost.layer_report) == OrderedDict
+
+    # check report existence and order
+    reports = cost.layer_report
+    assert list(reports.keys()) == [
+        'Convolution2DFunction-1',
+        'FixedBatchNormalization-1',
+        'ReLU-1',
+        'Convolution2DFunction-2',
+        'FixedBatchNormalization-2',
+        'ReLU-2',
+        'Convolution2DFunction-3',
+        'FixedBatchNormalization-3',
+        'ReLU-3',
+        'AveragePooling2D-1',
+        'Reshape-1',
+        'LinearFunction-1',
+        'ReLU-4',
+        'LinearFunction-2'
+    ]
+
+    # check parameters are properly reported
+    assert reports['Convolution2DFunction-1']['params']['kw'] == 3
+    assert reports['Convolution2DFunction-1']['params']['groups'] == 1
+    assert reports['ReLU-1']['params'] == dict()
+    assert reports['AveragePooling2D-1']['params']['kw'] == 32
+
+    # check input and output shapes are properly reported
+    conv_report = reports['Convolution2DFunction-1']
+    assert len(conv_report['input_shapes']) == 3
+    assert conv_report['input_shapes'][0] == (1, 3, 32, 32)
+    assert conv_report['input_shapes'][1] == (32, 3, 3, 3)
+    assert conv_report['input_shapes'][2] == (32,)
+    assert len(conv_report['output_shapes']) == 1
+    assert conv_report['output_shapes'][0] == (1, 32, 32, 32)
 
 
 def test_custom_cost_calculator():
@@ -47,7 +84,7 @@ def test_custom_cost_calculator():
     def calc_custom(func: AddConstant, in_data, **kwargs):
         nonlocal called
         called = True
-        return (100, 100, 100)
+        return (100, 100, 100, {})
 
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
     x = chainer.Variable(x)

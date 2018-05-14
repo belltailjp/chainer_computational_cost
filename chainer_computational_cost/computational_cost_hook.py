@@ -63,6 +63,10 @@ class ComputationalCostHook(chainer.FunctionHook):
         if type(function) is chainer.function.FunctionAdapter:
             function = function._function
 
+        outs = function.forward(in_data)
+        input_shapes = [x.shape for x in in_data]
+        output_shapes = [y.shape for y in outs]
+
         func_type = type(function)
         label, name = self._get_func_name_and_label(func_type)
 
@@ -76,12 +80,14 @@ class ComputationalCostHook(chainer.FunctionHook):
                   "ComputationalCostHook, ignored".format(fqn))
             self.ignored_layers[name] = {
                 'type': label,
-                'traceback': self._get_stack_trace()
+                'traceback': self._get_stack_trace(),
+                'input_shapes': input_shapes,
+                'output_shapes': output_shapes
             }
             return
 
         res = cal(function, in_data, unify_fma=self._unify_fma)
-        flops, mread, mwrite = res
+        flops, mread, mwrite, params = res
 
         # to bytes
         itemsize = in_data[0].dtype.itemsize
@@ -94,7 +100,10 @@ class ComputationalCostHook(chainer.FunctionHook):
             'mread': mread,
             'mwrite': mwrite,
             'mrw': mread + mwrite,
-            'traceback': self._get_stack_trace()
+            'traceback': self._get_stack_trace(),
+            'input_shapes': input_shapes,
+            'output_shapes': output_shapes,
+            'params': params
         }
 
         for name in ('total', label):

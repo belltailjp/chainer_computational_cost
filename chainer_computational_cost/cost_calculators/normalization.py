@@ -11,7 +11,7 @@ def calc_fixed_bn(func: FixedBatchNormalization, in_data, **kwargs):
     flops = n_elements * 2    # *2 <- scale and shift
     mread = n_elements + len(mean) + len(var)
     mwrite = n_elements
-    return (flops, mread, mwrite)
+    return (flops, mread, mwrite, {'eps': func.eps})
 
 
 def calc_lrn(func: LocalResponseNormalization, in_data, **kwargs):
@@ -25,4 +25,8 @@ def calc_lrn(func: LocalResponseNormalization, in_data, **kwargs):
     flops = flops_total
     mread = x.size + x.shape[1] * x.shape[2] * s
     mwrite = x.size
-    return (flops, mread, mwrite)
+    params = {
+        'n': func.n, 'k': func.k,
+        'alpha': func.alpha, 'beta': func.beta
+    }
+    return (flops, mread, mwrite, params)

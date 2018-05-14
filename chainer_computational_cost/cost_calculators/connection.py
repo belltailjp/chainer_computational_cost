@@ -34,7 +34,15 @@ def calc_conv2d(func: Convolution2DFunction, in_data, **kwargs):
         flops += batch_size * out_c * out_w * out_h
         mread += b.size
 
-    return (flops * batch_size, mread, mwrite)
+    params = {
+        'kw': kw, 'kh': kh,
+        'sx': func.sx, 'sy': func.sy,
+        'pw': func.pw, 'ph': func.ph,
+        'dx': func.dx, 'dy': func.dy,
+        'groups': func.groups,
+        'nobias': b is None
+    }
+    return (flops * batch_size, mread, mwrite, params)
 
 
 def calc_deconv2d(func: Deconvolution2DFunction, in_data, **kwargs):
@@ -60,7 +68,15 @@ def calc_deconv2d(func: Deconvolution2DFunction, in_data, **kwargs):
         flops += batch_size * out_c * out_w * out_h
         mread += b.size
 
-    return (flops * batch_size, mread, mwrite)
+    params = {
+        'kw': kw, 'kh': kh,
+        'sx': func.sx, 'sy': func.sy,
+        'pw': func.pw, 'ph': func.ph,
+        'dx': func.dx, 'dy': func.dy,
+        'groups': func.groups,
+        'nobias': b is None
+    }
+    return (flops * batch_size, mread, mwrite, params)
 
 
 def calc_linear(func: LinearFunction, in_data, **kwargs):
@@ -81,9 +97,14 @@ def calc_linear(func: LinearFunction, in_data, **kwargs):
         flops += b.size
         mread += b.size
 
-    return (flops, mread, mwrite)
+    params = {'nobias': len(in_data) < 3}
+    return (flops, mread, mwrite, params)
 
 
 def calc_shift(func: Shift, in_data, **kwargs):
     x, = in_data
-    return (0, x.size, x.size)
+    params = {
+        'kw': func.kw, 'kh': func.kh,
+        'dx': func.dx, 'dy': func.dy
+    }
+    return (0, x.size, x.size, params)
