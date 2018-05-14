@@ -205,5 +205,6 @@ class ComputationalCostHook(chainer.FunctionHook):
     def _show_table(self, table_report, ost):
         import texttable
         table = texttable.Texttable(max_width=0)
+        table.set_precision(6)
         table.add_rows(table_report)
         ost.write(table.draw() + '\n')

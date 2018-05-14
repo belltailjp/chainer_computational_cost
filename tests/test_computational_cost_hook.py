@@ -63,10 +63,10 @@ def test_simple_net():
     ]
 
     # check parameters are properly reported
-    assert reports['Convolution2DFunction-1']['params']['kw'] == 3
+    assert reports['Convolution2DFunction-1']['params']['k'] == 3
     assert reports['Convolution2DFunction-1']['params']['groups'] == 1
     assert reports['ReLU-1']['params'] == dict()
-    assert reports['AveragePooling2D-1']['params']['kw'] == 32
+    assert reports['AveragePooling2D-1']['params']['k'] == 32
 
     # check input and output shapes are properly reported
     conv_report = reports['Convolution2DFunction-1']

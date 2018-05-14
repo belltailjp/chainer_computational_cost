@@ -17,7 +17,7 @@ def calc_resize(func: ResizeImages, in_data, **kwargs):
     x, = in_data
     batch_size, in_c = x.shape[:2]
     out_size = batch_size * in_c * func.out_H * func.out_W
-    params = {'out_H': func.out_H, 'out_W': func.out_W}
+    params = {'size': (func.out_H, func.out_W)}
     return (out_size * 18, out_size * 4, out_size, params)
 
 

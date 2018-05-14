@@ -14,8 +14,7 @@ def test_conv2d_with_bias_unifyfma():
     assert mr == 3 * 10 * 10 + 12 * 3 * 3 * 3 + 12
     assert mw == 12 * 10 * 10
     assert params == {
-        'kw': 3, 'kh': 3, 'sx': 1, 'sy': 1,
-        'pw': 1, 'ph': 1, 'dx': 1, 'dy': 1,
+        'k': 3, 's': 1, 'p': 1, 'd': 1,
         'groups': 1, 'nobias': False
     }
 
@@ -29,8 +28,7 @@ def test_conv2d_nobias_unifyfma():
     assert mr == 3 * 10 * 10 + 12 * 3 * 3 * 3
     assert mw == 12 * 10 * 10
     assert params == {
-        'kw': 3, 'kh': 3, 'sx': 1, 'sy': 1,
-        'pw': 1, 'ph': 1, 'dx': 1, 'dy': 1,
+        'k': 3, 's': 1, 'p': 1, 'd': 1,
         'groups': 1, 'nobias': True
     }
 
@@ -45,8 +43,7 @@ def test_conv2d_with_bias_no_unifyfma():
     assert mr == 3 * 10 * 10 + 12 * 3 * 3 * 3 + 12
     assert mw == 12 * 10 * 10
     assert params == {
-        'kw': 3, 'kh': 3, 'sx': 1, 'sy': 1,
-        'pw': 1, 'ph': 1, 'dx': 1, 'dy': 1,
+        'k': 3, 's': 1, 'p': 1, 'd': 1,
         'groups': 1, 'nobias': False
     }
 
@@ -60,8 +57,7 @@ def test_conv2d_nobias_no_unifyfma():
     assert mr == 3 * 10 * 10 + 12 * 3 * 3 * 3
     assert mw == 12 * 10 * 10
     assert params == {
-        'kw': 3, 'kh': 3, 'sx': 1, 'sy': 1,
-        'pw': 1, 'ph': 1, 'dx': 1, 'dy': 1,
+        'k': 3, 's': 1, 'p': 1, 'd': 1,
         'groups': 1, 'nobias': True
     }
 
@@ -76,8 +72,7 @@ def test_deconv2d_with_bias_unifyfma():
     assert mr == 3 * 10 * 10 + 3 * 12 * 3 * 3 + 12
     assert mw == 12 * 21 * 21
     assert params == {
-        'kw': 3, 'kh': 3, 'sx': 2, 'sy': 2,
-        'pw': 0, 'ph': 0, 'dx': 1, 'dy': 1,
+        'k': 3, 's': 2, 'p': 0, 'd': 1,
         'groups': 1, 'nobias': False
     }
 
@@ -91,8 +86,7 @@ def test_deconv2d_nobias_unifyfma():
     assert mr == 3 * 10 * 10 + 3 * 12 * 3 * 3
     assert mw == 12 * 21 * 21
     assert params == {
-        'kw': 3, 'kh': 3, 'sx': 2, 'sy': 2,
-        'pw': 0, 'ph': 0, 'dx': 1, 'dy': 1,
+        'k': 3, 's': 2, 'p': 0, 'd': 1,
         'groups': 1, 'nobias': True
     }
 
@@ -107,8 +101,7 @@ def test_deconv2d_with_bias_no_unifyfma():
     assert mr == 3 * 10 * 10 + 3 * 12 * 3 * 3 + 12
     assert mw == 12 * 21 * 21
     assert params == {
-        'kw': 3, 'kh': 3, 'sx': 2, 'sy': 2,
-        'pw': 0, 'ph': 0, 'dx': 1, 'dy': 1,
+        'k': 3, 's': 2, 'p': 0, 'd': 1,
         'groups': 1, 'nobias': False
     }
 
@@ -122,8 +115,7 @@ def test_deconv2d_nobias_no_unifyfma():
     assert mr == 3 * 10 * 10 + 3 * 12 * 3 * 3
     assert mw == 12 * 21 * 21
     assert params == {
-        'kw': 3, 'kh': 3, 'sx': 2, 'sy': 2,
-        'pw': 0, 'ph': 0, 'dx': 1, 'dy': 1,
+        'k': 3, 's': 2, 'p': 0, 'd': 1,
         'groups': 1, 'nobias': True
     }
 

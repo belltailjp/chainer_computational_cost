@@ -35,12 +35,11 @@ def calc_conv2d(func: Convolution2DFunction, in_data, **kwargs):
         mread += b.size
 
     params = {
-        'kw': kw, 'kh': kh,
-        'sx': func.sx, 'sy': func.sy,
-        'pw': func.pw, 'ph': func.ph,
-        'dx': func.dx, 'dy': func.dy,
-        'groups': func.groups,
-        'nobias': b is None
+        'k': (kw if kw == kh else (kh, kw)),
+        's': (func.sx if func.sx == func.sy else (func.sy, func.sx)),
+        'p': (func.pw if func.pw == func.ph else (func.ph, func.pw)),
+        'd': (func.dx if func.dx == func.dy else (func.dy, func.dx)),
+        'groups': func.groups, 'nobias': b is None
     }
     return (flops * batch_size, mread, mwrite, params)
 
@@ -69,10 +68,10 @@ def calc_deconv2d(func: Deconvolution2DFunction, in_data, **kwargs):
         mread += b.size
 
     params = {
-        'kw': kw, 'kh': kh,
-        'sx': func.sx, 'sy': func.sy,
-        'pw': func.pw, 'ph': func.ph,
-        'dx': func.dx, 'dy': func.dy,
+        'k': (kw if kw == kh else (kh, kw)),
+        's': (func.sx if func.sx == func.sy else (func.sy, func.sx)),
+        'p': (func.pw if func.pw == func.ph else (func.ph, func.pw)),
+        'd': (func.dx if func.dx == func.dy else (func.dy, func.dx)),
         'groups': func.groups,
         'nobias': b is None
     }

@@ -53,7 +53,7 @@ def test_resize():
     assert flops == 3 * 15 * 15 * 18
     assert mread == 3 * 15 * 15 * 4
     assert mwrite == 3 * 15 * 15
-    assert params == {'out_W': 15, 'out_H': 15}
+    assert params == {'size': (15, 15)}
 
 
 def test_transpose():

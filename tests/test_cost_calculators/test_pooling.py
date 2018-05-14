@@ -14,11 +14,7 @@ def test_max_pooling():
     assert flops == (3 * 50 * 50) * (2 * 2 - 1)
     assert mread == x.size
     assert mwrite == (3 * 50 * 50)
-    assert params == {
-        'kw': 2, 'kh': 2,
-        'sx': 2, 'sy': 2,
-        'pw': 0, 'ph': 0
-    }
+    assert params == {'k': 2, 's': 2, 'p': 0}
 
 
 def test_average_pooling():
@@ -31,8 +27,4 @@ def test_average_pooling():
     assert flops == (3 * 50 * 50) * ((2 * 2 - 1) + 1)
     assert mread == x.size
     assert mwrite == (3 * 50 * 50)
-    assert params == {
-        'kw': 2, 'kh': 2,
-        'sx': 2, 'sy': 2,
-        'pw': 0, 'ph': 0
-    }
+    assert params == {'k': 2, 's': 2, 'p': 0}
