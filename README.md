@@ -236,37 +236,28 @@ This contains total costs for each type of layers.
 >>> cost.summary_report
 {
     "total": {
-        "type": "total",
-        "name": "total",
-        "flops": 15501970847,
-        "mread": 668603456,
-        "mwrite": 114575168,
-        "mrw": 783178624,
-        "input_shapes": "--",
-        "output_shapes": "--",
-        "params": {}
+      "type": "total",
+      "name": "total",
+      "flops": 15501970847,
+      "mread": 668603456,
+      "mwrite": 114575168,
+      "mrw": 783178624
     },
     "Convolution2DFunction": {
-        "type": "Convolution2DFunction",
-        "name": "total",
-        "flops": 15360178176,
-        "mread": 95186176,
-        "mwrite": 54190080,
-        "mrw": 149376256,
-        "input_shapes": "--",
-        "output_shapes": "--",
-        "params": {}
+      "type": "Convolution2DFunction",
+      "name": "Convolution2DFunction",
+      "flops": 15360178176,
+      "mread": 95186176,
+      "mwrite": 54190080,
+      "mrw": 149376256
     },
     "ReLU": {
-        "type": "ReLU",
-        "name": "total",
-        "flops": 13555712,
-        "mread": 54222848,
-        "mwrite": 54222848,
-        "mrw": 108445696,
-        "input_shapes": "--",
-        "output_shapes": "--",
-        "params": {}
+      "type": "ReLU",
+      "name": "ReLU",
+      "flops": 13555712,
+      "mread": 54222848,
+      "mwrite": 54222848,
+      "mrw": 108445696
     },
 	  ...
 }

@@ -119,10 +119,8 @@ class ComputationalCostHook(chainer.FunctionHook):
         for label in ('total', label):
             if label not in self.summary_report:
                 self.summary_report[label] = {
-                    'type': label, 'name': 'total', 'flops': 0,
-                    'mread': 0, 'mwrite': 0, 'mrw': 0,
-                    'input_shapes': '--', 'output_shapes': '--',
-                    'params': {}
+                    'type': label, 'name': label, 'flops': 0,
+                    'mread': 0, 'mwrite': 0, 'mrw': 0
                 }
             report = self.summary_report[label]
             report['flops'] += flops
@@ -179,6 +177,9 @@ class ComputationalCostHook(chainer.FunctionHook):
                     rep[c] /= coeff
             if 'params' in rep:
                 rep['params'] = self._prettify_dict(rep['params'])
+            for c in cols:
+                if c not in rep:
+                    rep[c] = ''
             table_report.append([rep[c] for c in cols])
 
         if mode == 'csv':
