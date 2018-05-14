@@ -78,6 +78,11 @@ def test_simple_net():
     assert len(conv_report['output_shapes']) == 1
     assert conv_report['output_shapes'][0] == (1, 32, 32, 32)
 
+    # check summary report
+    assert cost.summary_report['Convolution2DFunction']['n_layers'] == 3
+    assert cost.summary_report['FixedBatchNormalization']['n_layers'] == 3
+    assert cost.summary_report['LinearFunction']['n_layers'] == 2
+
 
 def test_repeat():
     # To check if show_table doesn't break internal states

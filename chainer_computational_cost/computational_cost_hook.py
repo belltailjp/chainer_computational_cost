@@ -16,6 +16,7 @@ class ComputationalCostHook(chainer.FunctionHook):
     }
     _col_header_table = {
         'type': 'Layer type',
+        'n_layers': '# Layers',
         'name': 'Layer name',
         'flops': '{}FLOPs',
         'mread': 'MemRead\n{}B/s',
@@ -119,11 +120,12 @@ class ComputationalCostHook(chainer.FunctionHook):
         for label in ('total', label):
             if label not in self.summary_report:
                 self.summary_report[label] = {
-                    'type': label, 'name': label, 'flops': 0,
-                    'mread': 0, 'mwrite': 0, 'mrw': 0
+                    'type': label, 'name': label, 'n_layers': 0,
+                    'flops': 0, 'mread': 0, 'mwrite': 0, 'mrw': 0
                 }
             report = self.summary_report[label]
             report['flops'] += flops
+            report['n_layers'] += 1
             report['mread'] += mread
             report['mwrite'] += mwrite
             report['mrw'] += mread + mwrite
@@ -132,7 +134,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         return "{}.{}".format(func_type.__module__, func_type.__name__)
 
     def show_summary_report(self, ost=sys.stdout, mode='csv', unit='G',
-                            columns=['type', 'flops', 'mread',
+                            columns=['type', 'n_layers', 'flops', 'mread',
                                      'mwrite', 'mrw']):
         # bring 'total' to the last
         report = copy.deepcopy(self.summary_report)
