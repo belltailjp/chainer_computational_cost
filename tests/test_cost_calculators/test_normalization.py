@@ -11,19 +11,21 @@ def test_fixed_bn():
     mean = np.random.randn(3).astype(np.float32)
     var = np.random.exponential(size=(3,)).astype(np.float32)
     f = N.batch_normalization.FixedBatchNormalization()
-    flops, mread, mwrite = calculators[type(f)](f, [x, gamma, beta, mean, var])
+    ret = calculators[type(f)](f, [x, gamma, beta, mean, var])
+    flops, mread, mwrite, params = ret
 
     # in test mode BN, gamma, beta, mean and var will eventually become
     # channel-wise scale and shift.
     assert flops == 3 * 10 * 10 * 2
     assert mread == 3 * 10 * 10 + (3 + 3)   # input data, scale and shift param
     assert mwrite == 3 * 10 * 10
+    assert params == {'eps': f.eps}
 
 
 def test_lrn():     # TODO(belltailjp): verify formula
     x = np.random.randn(1, 8, 10, 10).astype(np.float32)
     f = N.local_response_normalization.LocalResponseNormalization()
-    flops, mread, mwrite = calculators[type(f)](f, [x])
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
 
     # square x, neighboring sum
     c = x.shape[1]
@@ -34,3 +36,7 @@ def test_lrn():     # TODO(belltailjp): verify formula
     assert flops == flops_total
     assert mread == x.size + x.shape[1] * x.shape[2] * s
     assert mwrite == x.size
+    assert params == {
+        'n': 5, 'k': 2,
+        'alpha': 0.0001, 'beta': 0.75
+    }

@@ -1,6 +1,5 @@
-from __future__ import print_function
-
 from collections import OrderedDict
+import copy
 import inspect
 import itertools
 import sys
@@ -15,7 +14,18 @@ class ComputationalCostHook(chainer.FunctionHook):
     _coeff_table = {
         None: 1, 'k': 10**3, 'M': 10**6, 'G': 10**9, 'T': 10**12
     }
-
+    _col_header_table = {
+        'type': 'Layer type',
+        'n_layers': '# Layers',
+        'name': 'Layer name',
+        'flops': '{}FLOPs',
+        'mread': 'MemRead\n{}B/s',
+        'mwrite': 'MemWrite\n{}B/s',
+        'mrw': 'MemR/W\n{}B/s',
+        'input_shapes': 'Input shapes',
+        'output_shapes': 'Output shapes',
+        'params': 'Function parameters'
+    }
     _custom_cost_calculators = dict()
 
     def __init__(self, unify_fma=True):
@@ -63,6 +73,10 @@ class ComputationalCostHook(chainer.FunctionHook):
         if type(function) is chainer.function.FunctionAdapter:
             function = function._function
 
+        outs = function.forward(in_data)
+        input_shapes = [x.shape for x in in_data]
+        output_shapes = [y.shape for y in outs]
+
         func_type = type(function)
         label, name = self._get_func_name_and_label(func_type)
 
@@ -76,12 +90,14 @@ class ComputationalCostHook(chainer.FunctionHook):
                   "ComputationalCostHook, ignored".format(fqn))
             self.ignored_layers[name] = {
                 'type': label,
-                'traceback': self._get_stack_trace()
+                'traceback': self._get_stack_trace(),
+                'input_shapes': input_shapes,
+                'output_shapes': output_shapes
             }
             return
 
         res = cal(function, in_data, unify_fma=self._unify_fma)
-        flops, mread, mwrite = res
+        flops, mread, mwrite, params = res
 
         # to bytes
         itemsize = in_data[0].dtype.itemsize
@@ -89,21 +105,27 @@ class ComputationalCostHook(chainer.FunctionHook):
         mwrite *= itemsize
 
         self.layer_report[name] = {
+            'name': name,
             'type': label,
             'flops': flops,
             'mread': mread,
             'mwrite': mwrite,
             'mrw': mread + mwrite,
-            'traceback': self._get_stack_trace()
+            'traceback': self._get_stack_trace(),
+            'input_shapes': input_shapes,
+            'output_shapes': output_shapes,
+            'params': params
         }
 
-        for name in ('total', label):
-            if name not in self.summary_report:
-                self.summary_report[name] = {
+        for label in ('total', label):
+            if label not in self.summary_report:
+                self.summary_report[label] = {
+                    'type': label, 'name': label, 'n_layers': 0,
                     'flops': 0, 'mread': 0, 'mwrite': 0, 'mrw': 0
                 }
-            report = self.summary_report[name]
+            report = self.summary_report[label]
             report['flops'] += flops
+            report['n_layers'] += 1
             report['mread'] += mread
             report['mwrite'] += mwrite
             report['mrw'] += mread + mwrite
@@ -111,7 +133,29 @@ class ComputationalCostHook(chainer.FunctionHook):
     def _get_fqn(self, func_type):
         return "{}.{}".format(func_type.__module__, func_type.__name__)
 
-    def show_report(self, dst=sys.stdout, mode='csv', unit='G', summary=False):
+    def show_summary_report(self, ost=sys.stdout, mode='csv', unit='G',
+                            columns=['type', 'n_layers', 'flops', 'mread',
+                                     'mwrite', 'mrw']):
+        # bring 'total' to the last
+        report = copy.deepcopy(self.summary_report)
+        report['total'] = report.pop('total')
+        self._show_report_body(report, True, ost, mode, unit, columns)
+
+    def show_report(self, ost=sys.stdout, mode='csv', unit='G',
+                    columns=['name', 'flops', 'mread', 'mwrite', 'mrw']):
+        # add 'total' to the last
+        total = {'total': self.summary_report['total']}
+        report = itertools.chain(self.layer_report.items(), total.items())
+        report = OrderedDict(report)
+        report = copy.deepcopy(report)
+        self._show_report_body(report, False, ost, mode, unit, columns)
+
+    def _show_report_body(self, report, summary, ost, mode, unit, cols):
+        # check cols
+        rep = list(report.values())[0]
+        assert all([c in rep for c in cols]), \
+            "Unknown column(s) specified: {}".format(cols)
+
         if unit not in self._coeff_table:
             raise ValueError("Please specify either None, 'k', 'M', 'G' or 'T'"
                              " to argument `unit`.")
@@ -119,56 +163,55 @@ class ComputationalCostHook(chainer.FunctionHook):
         if unit is None:
             unit = ''
 
-        if summary:
-            report = self.summary_report.copy()
-            total = report.pop('total')  # bring total to the last
-            report['total'] = total
-        else:
-            total = {'total': self.summary_report['total']}
-            report = itertools.chain(self.layer_report.items(), total.items())
-            report = OrderedDict(report)
+        # make a header
+        header = []
+        for c in cols:
+            fmt = self._col_header_table[c]
+            if '{}' in fmt:
+                fmt = fmt.format(unit)
+            header.append(fmt)
+
+        # make table records
+        table_report = [header]
+        for layer, rep in report.items():
+            if unit != '':
+                for c in ['flops', 'mread', 'mwrite', 'mrw']:
+                    rep[c] /= coeff
+            if 'params' in rep:
+                rep['params'] = self._prettify_dict(rep['params'])
+            for c in cols:
+                if c not in rep:
+                    rep[c] = ''
+            table_report.append([rep[c] for c in cols])
 
         if mode == 'csv':
-            self._show_csv(report, dst, unit, coeff)
+            self._show_csv(table_report, ost)
         elif mode == 'md':
-            self._show_md(report, dst, unit, coeff)
+            self._show_md(table_report, ost)
         elif mode == 'table':
-            self._show_table(report, dst, unit, coeff)
+            self._show_table(table_report, ost)
         else:
             raise ValueError("Please specify either 'table' or 'md' to"
                              " argument `mode`")
 
-    def _get_rep(self, rep, coeff):
-        vals = (rep[k] for k in ['flops', 'mread', 'mwrite', 'mrw'])
-        if coeff != 1:
-            vals = (v / coeff for v in vals)
-        return vals
+    def _prettify_dict(self, rep):
+        return ', '.join(['{}={}'.format(k, v) for k, v in rep.items()])
 
-    def _show_csv(self, report, ost, unit, coeff):
-        ost.write("layer,{0}FLOPs,mread({0}B),"
-                  "mwrite({0}B),mrw({0}B)\n".format(unit))
-        for layer, rep in report.items():
-            flops, mread, mwrite, mrw = self._get_rep(rep, coeff)
-            ost.write("{},{},{},{},{}\n"
-                      .format(layer, flops, mread, mwrite, mrw))
+    def _show_csv(self, table_report, ost):
+        for reps in table_report:
+            reps = ','.join([str(r) for r in reps])
+            ost.write(reps.replace('\n', ' ') + '\n')
 
-    def _show_md(self, report, ost, unit, coeff):
-        ost.write("|layer|{0}FLOPs|mread({0}B)|"
-                  "mwrite({0}B)|mrw({0}B)|\n".format(unit))
-        ost.write("|:----|:----|:----|:----|\n")
-        for layer, rep in report.items():
-            flops, mread, mwrite, mrw = self._get_rep(rep, coeff)
-            ost.write("|{}|{}|{}|{}|{}|\n"
-                      .format(layer, flops, mread, mwrite, mrw))
+    def _show_md(self, table_report, ost):
+        for i, reps in enumerate(table_report):
+            if i == 1:
+                ost.write('|:----' * len(reps) + '|\n')
+            reps = '|'.join([str(r) for r in reps])
+            ost.write('|' + reps.replace('\n', ' ') + '|\n')
 
-    def _show_table(self, report, ost, unit, coeff):
+    def _show_table(self, table_report, ost):
         import texttable
-        table = texttable.Texttable()
-
-        h = "layer,{0}FLOPs,mread({0}B),mwrite({0}B),mrw({0}B)".format(unit)
-        rows = [h.split(',')]
-        for layer, rep in report.items():
-            flops, mread, mwrite, mrw = self._get_rep(rep, coeff)
-            rows.append([layer, str(flops), str(mread), str(mwrite), str(mrw)])
-        table.add_rows(rows)
+        table = texttable.Texttable(max_width=0)
+        table.set_precision(6)
+        table.add_rows(table_report)
         ost.write(table.draw() + '\n')

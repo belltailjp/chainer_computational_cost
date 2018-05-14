@@ -45,64 +45,104 @@ with chainer.no_backprop_mode(), chainer.using_config('train', False):
 
 It will show the following table to stdout.
 
-
-|layer|GFLOPs|mread(GB)|mwrite(GB)|
-|:----|:----|:----|:----|
-|AddConstant-1|0.000150528|0.001204224|0.000602112|
-|Convolution2DFunction-1|0.089915392|0.00060928|0.012845056|
-|ReLU-1|0.003211264|0.012845056|0.012845056|
-|Convolution2DFunction-2|1.852899328|0.012992768|0.012845056|
-|ReLU-2|0.003211264|0.012845056|0.012845056|
-|MaxPooling2D-1|0.002408448|0.012845056|0.003211264|
-|Convolution2DFunction-3|0.926449664|0.003506688|0.006422528|
-|ReLU-3|0.001605632|0.006422528|0.006422528|
-|Convolution2DFunction-4|1.851293696|0.007012864|0.006422528|
-|ReLU-4|0.001605632|0.006422528|0.006422528|
-|MaxPooling2D-2|0.001204224|0.006422528|0.001605632|
-|Convolution2DFunction-5|0.925646848|0.002786304|0.003211264|
-|ReLU-5|0.000802816|0.003211264|0.003211264|
-|Convolution2DFunction-6|1.85049088|0.005571584|0.003211264|
-|ReLU-6|0.000802816|0.003211264|0.003211264|
-|Convolution2DFunction-7|1.85049088|0.005571584|0.003211264|
-|ReLU-7|0.000802816|0.003211264|0.003211264|
-|MaxPooling2D-3|0.000602112|0.003211264|0.000802816|
-|Convolution2DFunction-8|0.92524544|0.005523456|0.001605632|
-|ReLU-8|0.000401408|0.001605632|0.001605632|
-|Convolution2DFunction-9|1.850089472|0.011044864|0.001605632|
-|ReLU-9|0.000401408|0.001605632|0.001605632|
-|Convolution2DFunction-10|1.850089472|0.011044864|0.001605632|
-|ReLU-10|0.000401408|0.001605632|0.001605632|
-|MaxPooling2D-4|0.000301056|0.001605632|0.000401408|
-|Convolution2DFunction-11|0.462522368|0.00984064|0.000401408|
-|ReLU-11|0.000100352|0.000401408|0.000401408|
-|Convolution2DFunction-12|0.462522368|0.00984064|0.000401408|
-|ReLU-12|0.000100352|0.000401408|0.000401408|
-|Convolution2DFunction-13|0.462522368|0.00984064|0.000401408|
-|ReLU-13|0.000100352|0.000401408|0.000401408|
-|MaxPooling2D-5|7.5264e-05|0.000401408|0.000100352|
-|Reshape-1|0.0|0.0|0.0|
-|LinearFunction-1|0.102764544|0.411158528|1.6384e-05|
-|ReLU-14|4.096e-06|1.6384e-05|1.6384e-05|
-|LinearFunction-2|0.016781312|0.067141632|1.6384e-05|
-|ReLU-15|4.096e-06|1.6384e-05|1.6384e-05|
-|LinearFunction-3|0.004097|0.016404384|4e-06|
-|Softmax-1|2.999e-06|4e-06|4e-06|
-|total|15.502121375|0.66980768|0.11517728|
+|Layer name|GFLOPs|MemRead GB/s|MemWrite GB/s|MemR/W GB/s|
+|:----|:----|:----|:----|:----|
+|Convolution2DFunction-1|0.089915392|0.00060928|0.012845056|0.013454336|
+|ReLU-1|0.003211264|0.012845056|0.012845056|0.025690112|
+|Convolution2DFunction-2|1.852899328|0.012992768|0.012845056|0.025837824|
+|ReLU-2|0.003211264|0.012845056|0.012845056|0.025690112|
+|MaxPooling2D-1|0.002408448|0.012845056|0.003211264|0.01605632|
+|Convolution2DFunction-3|0.926449664|0.003506688|0.006422528|0.009929216|
+|ReLU-3|0.001605632|0.006422528|0.006422528|0.012845056|
+|Convolution2DFunction-4|1.851293696|0.007012864|0.006422528|0.013435392|
+|ReLU-4|0.001605632|0.006422528|0.006422528|0.012845056|
+|MaxPooling2D-2|0.001204224|0.006422528|0.001605632|0.00802816|
+|Convolution2DFunction-5|0.925646848|0.002786304|0.003211264|0.005997568|
+|ReLU-5|0.000802816|0.003211264|0.003211264|0.006422528|
+|Convolution2DFunction-6|1.85049088|0.005571584|0.003211264|0.008782848|
+|ReLU-6|0.000802816|0.003211264|0.003211264|0.006422528|
+|Convolution2DFunction-7|1.85049088|0.005571584|0.003211264|0.008782848|
+|ReLU-7|0.000802816|0.003211264|0.003211264|0.006422528|
+|MaxPooling2D-3|0.000602112|0.003211264|0.000802816|0.00401408|
+|Convolution2DFunction-8|0.92524544|0.005523456|0.001605632|0.007129088|
+|ReLU-8|0.000401408|0.001605632|0.001605632|0.003211264|
+|Convolution2DFunction-9|1.850089472|0.011044864|0.001605632|0.012650496|
+|ReLU-9|0.000401408|0.001605632|0.001605632|0.003211264|
+|Convolution2DFunction-10|1.850089472|0.011044864|0.001605632|0.012650496|
+|ReLU-10|0.000401408|0.001605632|0.001605632|0.003211264|
+|MaxPooling2D-4|0.000301056|0.001605632|0.000401408|0.00200704|
+|Convolution2DFunction-11|0.462522368|0.00984064|0.000401408|0.010242048|
+|ReLU-11|0.000100352|0.000401408|0.000401408|0.000802816|
+|Convolution2DFunction-12|0.462522368|0.00984064|0.000401408|0.010242048|
+|ReLU-12|0.000100352|0.000401408|0.000401408|0.000802816|
+|Convolution2DFunction-13|0.462522368|0.00984064|0.000401408|0.010242048|
+|ReLU-13|0.000100352|0.000401408|0.000401408|0.000802816|
+|MaxPooling2D-5|7.5264e-05|0.000401408|0.000100352|0.00050176|
+|Reshape-1|0.0|0.0|0.0|0.0|
+|LinearFunction-1|0.102764544|0.411158528|1.6384e-05|0.411174912|
+|ReLU-14|4.096e-06|1.6384e-05|1.6384e-05|3.2768e-05|
+|LinearFunction-2|0.016781312|0.067141632|1.6384e-05|0.067158016|
+|ReLU-15|4.096e-06|1.6384e-05|1.6384e-05|3.2768e-05|
+|LinearFunction-3|0.004097|0.016404384|4e-06|0.016408384|
+|Softmax-1|2.999e-06|4e-06|4e-06|8e-06|
+|total|15.501970847|0.668603456|0.114575168|0.783178624|
 
 
-If you specify `summary=True` to `show_report`,
+
+If you call `show_summary_report` method,
 it will show summary for each type of layer.
 
-|layer|GFLOPs|mread(GB)|mwrite(GB)|
-|:----|:----|:----|:----|
-|AddConstant|0.000150528|0.001204224|0.000602112|
-|Convolution2DFunction|15.360178176|0.095186176|0.05419008|
-|ReLU|0.013555712|0.054222848|0.054222848|
-|MaxPooling2D|0.004591104|0.024485888|0.006121472|
-|Reshape|0.0|0.0|0.0|
-|LinearFunction|0.123642856|0.494704544|3.6768e-05|
-|Softmax|2.999e-06|4e-06|4e-06|
-|total|15.502121375|0.66980768|0.11517728|
+Both `show_report` and `show_summary_report` support
+`mode` param to switch print mode.
+Default is `mode='csv'`, but `mode='md'` (markdown table mode) and
+`mode='table'` (text table) are also supported.
+
+```
+>>> cost.show_summary_report(unit='G', mode='table')
++-----------------------+----------+-----------+----------+----------+----------+
+|      Layer type       | # Layers |  GFLOPs   | MemRead  | MemWrite |  MemR/W  |
+|                       |          |           |   GB/s   |   GB/s   |   GB/s   |
++=======================+==========+===========+==========+==========+==========+
+| Convolution2DFunction | 13       | 15.360178 | 0.095186 | 0.054190 | 0.149376 |
++-----------------------+----------+-----------+----------+----------+----------+
+| ReLU                  | 15       | 0.013556  | 0.054223 | 0.054223 | 0.108446 |
++-----------------------+----------+-----------+----------+----------+----------+
+| MaxPooling2D          | 5        | 0.004591  | 0.024486 | 0.006121 | 0.030607 |
++-----------------------+----------+-----------+----------+----------+----------+
+| Reshape               | 1        | 0         | 0        | 0        | 0        |
++-----------------------+----------+-----------+----------+----------+----------+
+| LinearFunction        | 3        | 0.123643  | 0.494705 | 0.000037 | 0.494741 |
++-----------------------+----------+-----------+----------+----------+----------+
+| Softmax               | 1        | 0.000003  | 0.000004 | 0.000004 | 0.000008 |
++-----------------------+----------+-----------+----------+----------+----------+
+| total                 | 38       | 15.501971 | 0.668603 | 0.114575 | 0.783179 |
++-----------------------+----------+-----------+----------+----------+----------+
+```
+
+
+In addition, you can specify which column to show as a table.
+
+```
+>>> cost.show_report(unit='G', mode='table' , columns=[
+...     'name', 'flops', 'mread', 'mwrite', 'mrw', 'output_shapes', "params"
+... ])
++--------------------------+-----------+----------+----------+----------+----------------------+--------------------------------------------+
+|        Layer name        |  GFLOPs   | MemRead  | MemWrite |  MemR/W  |    Output shapes     |            Function parameters             |
+|                          |           |   GB/s   |   GB/s   |   GB/s   |                      |                                            |
++==========================+===========+==========+==========+==========+======================+============================================+
+| Convolution2DFunction-1  | 0.089915  | 0.000609 | 0.012845 | 0.013454 | [(1, 64, 224, 224)]  | k=3, s=1, p=1, d=1, groups=1, nobias=False |
++--------------------------+-----------+----------+----------+----------+----------------------+--------------------------------------------+
+| ReLU-1                   | 0.003211  | 0.012845 | 0.012845 | 0.025690 | [(1, 64, 224, 224)]  |                                            |
++--------------------------+-----------+----------+----------+----------+----------------------+--------------------------------------------+
+| Convolution2DFunction-2  | 1.852899  | 0.012993 | 0.012845 | 0.025838 | [(1, 64, 224, 224)]  | k=3, s=1, p=1, d=1, groups=1, nobias=False |
++--------------------------+-----------+----------+----------+----------+----------------------+--------------------------------------------+
+| ReLU-2                   | 0.003211  | 0.012845 | 0.012845 | 0.025690 | [(1, 64, 224, 224)]  |                                            |
++--------------------------+-----------+----------+----------+----------+----------------------+--------------------------------------------+
+| MaxPooling2D-1           | 0.002408  | 0.012845 | 0.003211 | 0.016056 | [(1, 64, 112, 112)]  | k=2, s=2, p=0                              |
++--------------------------+-----------+----------+----------+----------+----------------------+--------------------------------------------+
+| ...                      | ...       | ...      | ...      | ...      | ...                  | ...                                        |
+
+```
 
 
 ## Usage
@@ -160,35 +200,69 @@ It is a huge dictionary whose structure is:
 
 ```
 {
-  'Layer-0': {
-    {
-      "type": "Convolution2DFunction",
-      "flops": 1850490880,
-      "mread": 5571584,
-      "mwrite": 3211264,
-      "traceback": (stack trace string of the layer)
-  },
-  ...
+    "Convolution2DFunction-1": {
+        "name": "Convolution2DFunction-1",
+        "type": "Convolution2DFunction",
+        "flops": 89915392,
+        "mread": 609280,
+        "mwrite": 12845056,
+        "mrw": 13454336,
+        "traceback": "(traceback string)",
+        "input_shapes": [[1, 3, 224, 224], [64, 3, 3, 3], [64]],
+        "output_shapes": [[1, 64, 224, 224]],
+        "params": {"k": 3, "s": 1, "p": 1, "d": 1, "groups": 1, "nobias": false}
+    },
+    "ReLU-1": {
+        "name": "ReLU-1",
+        "type": "ReLU",
+        "flops": 3211264,
+        "mread": 12845056,
+        "mwrite": 12845056,
+        "mrw": 25690112,
+        "traceback": "(traceback)",
+        "input_shapes": [[1, 64, 224, 224]],
+        "output_shapes": [[1, 64, 224, 224]],
+        "params": {}
+    },
+		...
 }
 ```
 
+
 Also, summary report can be found.
-This contains total costs for each type of layers
+This contains total costs for each type of layers.
 
 ```python
 >>> cost.summary_report
 {
-  "total": {
-    "flops": 15502121375,
-    "mread": 669807680,
-    "mwrite": 115177280
-  },
-  "AddConstant": {
-    "flops": 150528,
-    "mread": 1204224,
-    "mwrite": 602112
-  },
-  ...
+    "total": {
+        "type": "total",
+        "name": "total",
+        "n_layers": 38,
+        "flops": 15501970847,
+        "mread": 668603456,
+        "mwrite": 114575168,
+        "mrw": 783178624
+    },
+    "Convolution2DFunction": {
+        "type": "Convolution2DFunction",
+        "name": "Convolution2DFunction",
+        "n_layers": 13,
+        "flops": 15360178176,
+        "mread": 95186176,
+        "mwrite": 54190080,
+        "mrw": 149376256
+    },
+    "ReLU": {
+        "type": "ReLU",
+        "name": "ReLU",
+        "n_layers": 15,
+        "flops": 13555712,
+        "mread": 54222848,
+        "mwrite": 54222848,
+        "mrw": 108445696
+    },
+	  ...
 }
 ```
 
@@ -226,6 +300,18 @@ Custom cost calculator has to have the following signature.
   * Name: `**kwargs`
   * Some flags will be fed
     * `unify_fma: bool`, for example
+
+Also, a calculator has to return a tuple with the following 4 elements:
+* Number of FLOPs in `int`
+  * Focus only on principle floating point operations
+  * If `unify_fma=True` is specified in `kwargs`,
+    please treat operations that can be fused to an FMA operation as 1 FLOP.
+* Memory read (number of elements) in `int`
+* Memory write (number of elements) in `int`
+  * Not in "bytes". Conversion to bytes is automatically done by
+    `ComputationalCostHook`.
+* Parameters to report in `dict`
+  * Function-specific parameters, e.g. `k` of `Convolution2DFunction`.
 
 For more details about how to implement custom cost calculator,
 please refer existing implementations located in
