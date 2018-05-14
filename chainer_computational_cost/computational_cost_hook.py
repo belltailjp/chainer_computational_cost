@@ -194,13 +194,15 @@ class ComputationalCostHook(chainer.FunctionHook):
 
     def _show_csv(self, table_report, ost):
         for reps in table_report:
-            ost.write("{}\n".format(','.join([str(rep) for rep in reps])))
+            reps = ','.join([str(r) for r in reps])
+            ost.write(reps.replace('\n', ' ') + '\n')
 
     def _show_md(self, table_report, ost):
         for i, reps in enumerate(table_report):
             if i == 1:
                 ost.write('|:----' * len(reps) + '|\n')
-            ost.write("|{}|\n".format('|'.join([str(r) for r in reps])))
+            reps = '|'.join([str(r) for r in reps])
+            ost.write('|' + reps.replace('\n', ' ') + '|\n')
 
     def _show_table(self, table_report, ost):
         import texttable
