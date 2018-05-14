@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import copy
 
 import chainer
 import chainer.functions as F
@@ -76,6 +77,21 @@ def test_simple_net():
     assert conv_report['input_shapes'][2] == (32,)
     assert len(conv_report['output_shapes']) == 1
     assert conv_report['output_shapes'][0] == (1, 32, 32, 32)
+
+
+def test_repeat():
+    # To check if show_table doesn't break internal states
+    x = np.random.randn(1, 3, 32, 32).astype(np.float32)
+    net = SimpleConvNet()
+
+    with chainer.using_config('train', False):
+        with chainer_computational_cost.ComputationalCostHook() as cost:
+            net(x)
+            layer_report = copy.deepcopy(cost.layer_report)
+            for mode in ['md', 'csv', 'table']:
+                cost.show_report(mode=mode)
+                cost.show_summary_report(mode=mode)
+            assert cost.layer_report == layer_report
 
 
 def test_custom_cost_calculator():

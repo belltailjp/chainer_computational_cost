@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import copy
 import inspect
 import itertools
 import sys
@@ -136,7 +137,7 @@ class ComputationalCostHook(chainer.FunctionHook):
                             columns=['type', 'flops', 'mread',
                                      'mwrite', 'mrw']):
         # bring 'total' to the last
-        report = self.summary_report.copy()
+        report = copy.deepcopy(self.summary_report)
         report['total'] = report.pop('total')
         self._show_report_body(report, True, ost, mode, unit, columns)
 
@@ -146,6 +147,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         total = {'total': self.summary_report['total']}
         report = itertools.chain(self.layer_report.items(), total.items())
         report = OrderedDict(report)
+        report = copy.deepcopy(report)
         self._show_report_body(report, False, ost, mode, unit, columns)
 
     def _show_report_body(self, report, summary, ost, mode, unit, cols):
