@@ -30,6 +30,16 @@ In addition, for now, they are not in cosideration either.
   * For example, keeping conv weights in FP16, saves as FP32
   * chainer-computational-cost uses data type of input tensor of a layer
 
+Otherwise, these costs are also exluceded from computational cost.
+
+* Inside-layer working memory read/write
+  * Assume that every layers read only the input data and parameters from memory
+    and write only the final results back to memory
+* Index calculation
+  * For example, `shift` and `transpose` heavily relies on src/dst index
+    calculation but these are ignored
+* Broadcasting
+
 
 ## Requirements
 

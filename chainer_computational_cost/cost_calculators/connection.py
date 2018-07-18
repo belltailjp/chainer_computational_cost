@@ -84,6 +84,16 @@ def calc_deconv2d(func, in_data, **kwargs):
 
 @register(LinearFunction)
 def calc_linear(func, in_data, **kwargs):
+    """Linear
+
+    This supports `unify_fma` mode.
+
+    |Item|Value|
+    |:---|:---|
+    |FLOPs|0|
+    |mread|size of input|
+    |mwrite|size of input|
+    """
     x, W = in_data[:2]
     batch_size, in_c = x.shape
     out_c, _ = W.shape

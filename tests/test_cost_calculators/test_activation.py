@@ -12,7 +12,7 @@ def test_activation_prelu():
     assert flops == x.size
     assert mread == x.size + W.size
     assert mwrite == x.size
-    assert params == dict()
+    assert params == {'w_shape': W.shape}
 
 
 def test_activation_relu():
