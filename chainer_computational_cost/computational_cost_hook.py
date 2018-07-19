@@ -22,10 +22,10 @@ class ComputationalCostHook(chainer.FunctionHook):
             floating point operation (default=`True`). Otherwise it is 2.
     """
     _flops_coeff_table = {
-        None: 1, 'k': 10**3, 'M': 10**6, 'G': 10**9, 'T': 10**12
+        None: 1, 'K': 10**3, 'M': 10**6, 'G': 10**9, 'T': 10**12
     }
     _bytes_coeff_table = {
-        None: 1, 'k': 2**10, 'M': 2**20, 'G': 2**30, 'T': 2**40
+        None: 1, 'K': 2**10, 'M': 2**20, 'G': 2**30, 'T': 2**40
     }
     _col_header_table = {
         'type': 'Layer type',
@@ -189,7 +189,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             mode: `csv` (default), `md` and `table` are supported. When you use
                 `table` mode, it requires texttable package.
             unit: Supplementary units used for both computational cost (FLOPs)
-                and memory transfer (bytes). None, `k`, `M`, `G` (default) and
+                and memory transfer (bytes). None, `K`, `M`, `G` (default) and
                 `T` are supported.
             columns: which columns to include in summary.
         """
@@ -211,7 +211,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             mode: `csv` (default), `md` and `table` are supported. When you use
                 `table` mode, it requires texttable package.
             unit: Supplementary units used for both computational cost (FLOPs)
-                and memory transfer (bytes). None, `k`, `M`, `G` (default) and
+                and memory transfer (bytes). None, `K`, `M`, `G` (default) and
                 `T` are supported.
             columns: which columns to include in summary.
         """
@@ -229,7 +229,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             "Unknown column(s) specified: {}".format(cols)
 
         if unit not in self._flops_coeff_table:
-            raise ValueError("Please specify either None, 'k', 'M', 'G' or 'T'"
+            raise ValueError("Please specify either None, 'K', 'M', 'G' or 'T'"
                              " to argument `unit`.")
         coeff_flops = self._flops_coeff_table[unit]
         coeff_bytes = self._bytes_coeff_table[unit]
