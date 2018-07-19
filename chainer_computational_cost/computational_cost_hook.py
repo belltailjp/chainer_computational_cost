@@ -21,17 +21,20 @@ class ComputationalCostHook(chainer.FunctionHook):
         fma_1flop: Specify `True` when you want to treat FMA (ax+b) as one
             floating point operation (default=`True`). Otherwise it is 2.
     """
-    _coeff_table = {
+    _flops_coeff_table = {
         None: 1, 'k': 10**3, 'M': 10**6, 'G': 10**9, 'T': 10**12
+    }
+    _bytes_coeff_table = {
+        None: 1, 'k': 2**10, 'M': 2**20, 'G': 2**30, 'T': 2**40
     }
     _col_header_table = {
         'type': 'Layer type',
         'n_layers': '# Layers',
         'name': 'Layer name',
-        'flops': '{}FLOPs',
-        'mread': 'MemRead\n{}B/s',
-        'mwrite': 'MemWrite\n{}B/s',
-        'mrw': 'MemR+W\n{}B/s',
+        'flops': '{0}FLOPs',            # {0} is k, M, G, ...
+        'mread': 'MemRead\n{1}B/s',     # {1} is ki, Mi, Gi, ...
+        'mwrite': 'MemWrite\n{1}B/s',
+        'mrw': 'MemR+W\n{1}B/s',
         'input_shapes': 'Input shapes',
         'output_shapes': 'Output shapes',
         'params': 'Function parameters'
@@ -225,27 +228,29 @@ class ComputationalCostHook(chainer.FunctionHook):
         assert all([c in rep for c in cols]), \
             "Unknown column(s) specified: {}".format(cols)
 
-        if unit not in self._coeff_table:
+        if unit not in self._flops_coeff_table:
             raise ValueError("Please specify either None, 'k', 'M', 'G' or 'T'"
                              " to argument `unit`.")
-        coeff = self._coeff_table[unit]
+        coeff_flops = self._flops_coeff_table[unit]
+        coeff_bytes = self._bytes_coeff_table[unit]
         if unit is None:
             unit = ''
 
         # make a header
         header = []
         for c in cols:
+            # "{0}FLOPs" -> "GFLOPs", "{1}B/s" -> "GiB/s"
             fmt = self._col_header_table[c]
-            if '{}' in fmt:
-                fmt = fmt.format(unit)
+            fmt = fmt.format(unit, unit + 'i')
             header.append(fmt)
 
         # make table records
         table_report = [header]
         for layer, rep in report.items():
             if unit != '':
-                for c in ['flops', 'mread', 'mwrite', 'mrw']:
-                    rep[c] /= coeff
+                rep['flops'] /= coeff_flops
+                for c in ('mread', 'mwrite', 'mrw'):
+                    rep[c] /= coeff_bytes
             if 'params' in rep:
                 rep['params'] = self._prettify_dict(rep['params'])
             for c in cols:
