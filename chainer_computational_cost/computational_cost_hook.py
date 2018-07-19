@@ -18,7 +18,7 @@ class ComputationalCostHook(chainer.FunctionHook):
     theoretical computational cost (in FLOPs) and memory transfer.
 
     Args:
-        unify_fma: Specify `True` when you want to treat FMA (ax+b) as one
+        fma_1flop: Specify `True` when you want to treat FMA (ax+b) as one
             floating point operation (default=`True`). Otherwise it is 2.
     """
     _coeff_table = {
@@ -38,8 +38,8 @@ class ComputationalCostHook(chainer.FunctionHook):
     }
     _custom_cost_calculators = dict()
 
-    def __init__(self, unify_fma=True):
-        self._unify_fma = unify_fma
+    def __init__(self, fma_1flop=True):
+        self._fma_1flop = fma_1flop
         self._label_count = dict()
 
         self.layer_report = OrderedDict()
@@ -63,7 +63,7 @@ class ComputationalCostHook(chainer.FunctionHook):
                 is the data fed to the function in the computational graph.
                 The last argument should be `**kwargs`, which can include flags
                 specified to ComputationalCostHook constructor
-                (e.g. `unify_fma`).  You can overwrite existing cost calculator
+                (e.g. `fma_1flop`).  You can overwrite existing cost calculator
                 by your custom one.
         """
         p = inspect.signature(calculator).parameters
@@ -134,7 +134,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             }
             return
 
-        res = cal(function, in_data, unify_fma=self._unify_fma)
+        res = cal(function, in_data, fma_1flop=self._fma_1flop)
         flops, mread, mwrite, params = res
 
         # to bytes

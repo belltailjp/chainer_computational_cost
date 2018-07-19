@@ -25,7 +25,7 @@ def calc_conv2d(func: Convolution2DFunction, in_data, **kwargs):
                              cover_all=func.cover_all, d=func.dx)
 
     flops = in_c * int(math.ceil(out_c / g)) * kw * kh * out_w * out_h
-    if not kwargs['unify_fma']:
+    if not kwargs['fma_1flop']:
         flops *= 2
 
     mread = x.size + W.size
@@ -58,7 +58,7 @@ def calc_deconv2d(func: Deconvolution2DFunction, in_data, **kwargs):
                                func.pw, d=func.dx)
 
     flops = in_c * int(math.ceil(out_c / g)) * kw * kh * in_w * in_h
-    if not kwargs['unify_fma']:
+    if not kwargs['fma_1flop']:
         flops *= 2
 
     mread = x.size + W.size
@@ -83,7 +83,7 @@ def calc_linear(func: LinearFunction, in_data, **kwargs):
     batch_size, in_c = x.shape
     out_c, _ = W.shape
 
-    if kwargs['unify_fma']:
+    if kwargs['fma_1flop']:
         flops = batch_size * in_c * out_c
     else:
         flops = batch_size * (in_c + in_c - 1) * out_c

@@ -38,7 +38,7 @@ from chainer_computational_cost import ComputationalCostHook
 net = L.VGG16Layers()
 x = np.random.random((1, 3, 224, 224)).astype(np.float32)
 with chainer.no_backprop_mode(), chainer.using_config('train', False):
-    with ComputationalCostHook(unify_fma=True) as cost:
+    with ComputationalCostHook(fma_1flop=True) as cost:
         y = net(x)
         cost.show_report(unit='G', mode='md')
 ```
@@ -152,7 +152,7 @@ As for basic usage, please refer to the avobe quickstart.
 
 ### Unify FMA mode
 
-When `unify_fma` is set to `True`, chainer_computational_cost considers
+When `fma_1flop` is set to `True`, chainer_computational_cost considers
 FMA (fused multiply and add, `ax + b`) as one operation.
 Otherwise, it counts as 2 operations.
 
@@ -280,7 +280,7 @@ def custom_calculator(func: F.math.basic_math.Add, in_data, **kwargs)
     return (0, 0, 0)
 
 with chainer.no_backprop_mode(), chainer.using_config('train', False):
-    with ComputationalCostHook(unify_fma=True) as cost:
+    with ComputationalCostHook(fma_1flop=True) as cost:
         cost.add_custom_cost_calculator(custom_calculator)
         y = x + x   # Call Add
 
@@ -299,12 +299,12 @@ Custom cost calculator has to have the following signature.
 * Third keyword argument
   * Name: `**kwargs`
   * Some flags will be fed
-    * `unify_fma: bool`, for example
+    * `fma_1flop: bool`, for example
 
 Also, a calculator has to return a tuple with the following 4 elements:
 * Number of FLOPs in `int`
   * Focus only on principle floating point operations
-  * If `unify_fma=True` is specified in `kwargs`,
+  * If `fma_1flop=True` is specified in `kwargs`,
     please treat operations that can be fused to an FMA operation as 1 FLOP.
 * Memory read (number of elements) in `int`
 * Memory write (number of elements) in `int`
