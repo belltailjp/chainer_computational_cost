@@ -11,6 +11,16 @@ from chainer_computational_cost.cost_calculators import calculators
 
 
 class ComputationalCostHook(chainer.FunctionHook):
+    """Calculate theoretical computational cost of neural networks.
+
+    This is a chainer hook. Inside the scope of an instance of this class,
+    every chainer function call is caught by this hook and it accumulates
+    theoretical computational cost (in FLOPs) and memory transfer.
+
+    Args:
+        unify_fma: Specify `True` when you want to treat FMA (ax+b) as one
+            floating point operation (default=`True`). Otherwise it is 2.
+    """
     _coeff_table = {
         None: 1, 'k': 10**3, 'M': 10**6, 'G': 10**9, 'T': 10**12
     }
@@ -37,6 +47,25 @@ class ComputationalCostHook(chainer.FunctionHook):
         self.ignored_layers = OrderedDict()
 
     def add_custom_cost_calculator(self, calculator):
+        """Add custom cost calculator function.
+
+        This is an interface to extend the hook object so that the hook can
+        handle unsupported layers or user-defined custom layers
+        (and overwrite existing calculator).
+
+        Args:
+            calculator: Python function object whose signature is
+                `def custom_calculator(func: F.math.basic_math.Add,
+                in_data, **kwargs)`. The first argument name should be `func`,
+                and it has to have type hinting. chainer-computational-cost
+                hook calls your custom cost calculator when the function object
+                matches to the specified type annotation. The second argument
+                is the data fed to the function in the computational graph.
+                The last argument should be `**kwargs`, which can include flags
+                specified to ComputationalCostHook constructor
+                (e.g. `unify_fma`).  You can overwrite existing cost calculator
+                by your custom one.
+        """
         p = inspect.signature(calculator).parameters
         if not _check_sig(p):
             raise TypeError("Invalid signature for custom calculator."
@@ -70,6 +99,15 @@ class ComputationalCostHook(chainer.FunctionHook):
         return ''.join(tb).strip()
 
     def forward_postprocess(self, function, in_data):
+        """Hook function called by chainer.
+
+        During the hook object lifetime, every chainer function calls and their
+        inputs are passed to this method. It looks up cost calculator table and
+        call the calculator with function object and input data.
+        The returned informations are stored in this hook object.
+        If an unsupported function appears in computational graph, it simply
+        ignores them.
+        """
         if type(function) is chainer.function.FunctionAdapter:
             function = function._function
 
@@ -136,6 +174,22 @@ class ComputationalCostHook(chainer.FunctionHook):
     def show_summary_report(self, ost=sys.stdout, mode='csv', unit='G',
                             columns=['type', 'n_layers', 'flops', 'mread',
                                      'mwrite', 'mrw']):
+        """Show computational cost aggregated for each layer type.
+
+        Summarizes based on chainer function. Every call of same function
+        (e.g. F.convolution_2d) are aggregated and shown as a row.
+        The output is sorted by the order each layer is called first.
+
+        Args:
+            ost: Output destination. It has to be a stream, by default
+                `sys.stdout`.
+            mode: `csv` (default), `md` and `table` are supported. When you use
+                `table` mode, it requires texttable package.
+            unit: Supplementary units used for both computational cost (FLOPs)
+                and memory transfer (bytes). None, `k`, `M`, `G` (default) and
+                `T` are supported.
+            columns: which columns to include in summary.
+        """
         # bring 'total' to the last
         report = copy.deepcopy(self.summary_report)
         report['total'] = report.pop('total')
@@ -143,6 +197,21 @@ class ComputationalCostHook(chainer.FunctionHook):
 
     def show_report(self, ost=sys.stdout, mode='csv', unit='G',
                     columns=['name', 'flops', 'mread', 'mwrite', 'mrw']):
+        """Show computational cost aggregated for each layer.
+
+        Every single call of a function will appear as a row.
+        The output is sorted by the order each layer is called.
+
+        Args:
+            ost: Output destination. It has to be a stream, by default
+                `sys.stdout`.
+            mode: `csv` (default), `md` and `table` are supported. When you use
+                `table` mode, it requires texttable package.
+            unit: Supplementary units used for both computational cost (FLOPs)
+                and memory transfer (bytes). None, `k`, `M`, `G` (default) and
+                `T` are supported.
+            columns: which columns to include in summary.
+        """
         # add 'total' to the last
         total = {'total': self.summary_report['total']}
         report = itertools.chain(self.layer_report.items(), total.items())
