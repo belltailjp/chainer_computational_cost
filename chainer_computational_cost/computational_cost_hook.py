@@ -31,7 +31,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         'flops': '{}FLOPs',
         'mread': 'MemRead\n{}B/s',
         'mwrite': 'MemWrite\n{}B/s',
-        'mrw': 'MemR/W\n{}B/s',
+        'mrw': 'MemR+W\n{}B/s',
         'input_shapes': 'Input shapes',
         'output_shapes': 'Output shapes',
         'params': 'Function parameters'
