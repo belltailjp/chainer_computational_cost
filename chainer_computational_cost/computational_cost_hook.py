@@ -31,10 +31,10 @@ class ComputationalCostHook(chainer.FunctionHook):
         'type': 'Layer type',
         'n_layers': '# Layers',
         'name': 'Layer name',
-        'flops': '{0}FLOPs',            # {0} is k, M, G, ...
-        'mread': 'MemRead\n{1}B/s',     # {1} is ki, Mi, Gi, ...
-        'mwrite': 'MemWrite\n{1}B/s',
-        'mrw': 'MemR+W\n{1}B/s',
+        'flops': '{0}FLOPs',        # {0} is k, M, G, ...
+        'mread': 'MemRead\n{1}B',   # {1} is ki, Mi, Gi, ...
+        'mwrite': 'MemWrite\n{1}B',
+        'mrw': 'MemR+W\n{1}B',
         'input_shapes': 'Input shapes',
         'output_shapes': 'Output shapes',
         'params': 'Function parameters'
