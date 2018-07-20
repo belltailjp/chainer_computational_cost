@@ -125,16 +125,26 @@ def test_custom_cost_calculator():
 
 
 def test_custom_cost_calculator_invalid():
-    def calc_invalid_custom(func, in_data, **kwargs):
+    def calc_no_type_annotation(func, in_data, **kwargs):
         pass
+
+    def calc_not_tuple(func: AddConstant, in_data, **kwargs):
+        return [1, 1, 1, dict()]
+
+    def calc_insufficient_return(func: AddConstant, in_data, **kwargs):
+        return (1, 1, 1)
+
+    def calc_wrong_type(func: AddConstant, in_data, **kwargs):
+        return (1, 1, 1, None)
 
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
     x = chainer.Variable(x)
-    with chainer.using_config('train', False):
-        with chainer_computational_cost.ComputationalCostHook() as cost:
-            with pytest.raises(TypeError):
-                cost.add_custom_cost_calculator(calc_invalid_custom)
-                x = x + 1
+    for f in [calc_not_tuple, calc_not_tuple, calc_insufficient_return]:
+        with chainer.using_config('train', False):
+            with chainer_computational_cost.ComputationalCostHook() as cost:
+                with pytest.raises(TypeError), pytest.warns(UserWarning):
+                    cost.add_custom_cost_calculator(f)
+                    x = x + 1
 
 
 def test_report_ignored_layer():

@@ -139,7 +139,16 @@ class ComputationalCostHook(chainer.FunctionHook):
             return
 
         res = cal(function, in_data, fma_1flop=self._fma_1flop)
+        err_msg = "Cost calculator has to return a tuple whose length is "\
+                  "exactly 4 (flops: int, mread: int, "\
+                  "mwrite: int, params: dict)."
+        if type(res) != tuple or len(res) != 4:
+            raise TypeError(err_msg)
+
         flops, mread, mwrite, params = res
+        if type(flops) != int or type(mread) != int or \
+                type(mwrite) != int or type(params) != dict:
+            raise TypeError(err_msg)
 
         # to bytes
         itemsize = in_data[0].dtype.itemsize
