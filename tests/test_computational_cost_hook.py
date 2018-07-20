@@ -111,9 +111,10 @@ def test_custom_cost_calculator():
     x = chainer.Variable(x)
     with chainer.using_config('train', False):
         with chainer_computational_cost.ComputationalCostHook() as cost:
-            cost.add_custom_cost_calculator(calc_custom)
-            x = x + 1
-            report = cost.layer_report
+            with pytest.warns(UserWarning):
+                cost.add_custom_cost_calculator(calc_custom)
+                x = x + 1
+                report = cost.layer_report
 
     report = report['AddConstant-1']
     assert called is True
@@ -147,7 +148,8 @@ def test_report_ignored_layer():
 
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
     with chainer_computational_cost.ComputationalCostHook() as cost:
-        DummyFunc().apply(x)
-        assert len(cost.ignored_layers) == 1
-        assert 'DummyFunc' in list(cost.ignored_layers.keys())[0]
-        assert 'DummyFunc' == list(cost.ignored_layers.values())[0]['type']
+        with pytest.warns(UserWarning):
+            DummyFunc().apply(x)
+            assert len(cost.ignored_layers) == 1
+            assert 'DummyFunc' in list(cost.ignored_layers.keys())[0]
+            assert 'DummyFunc' == list(cost.ignored_layers.values())[0]['type']

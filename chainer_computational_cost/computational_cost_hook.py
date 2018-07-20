@@ -4,6 +4,7 @@ import inspect
 import itertools
 import sys
 import traceback
+import warnings
 
 import chainer
 from chainer_computational_cost.cost_calculators import _check_sig
@@ -75,13 +76,13 @@ class ComputationalCostHook(chainer.FunctionHook):
                             "")
         func_type = p['func'].annotation
         if func_type in calculators:
-            print("Warning: replacing default cost calculator for {}"
-                  .format(func_type.__name__))
+            warnings.warn("replacing default cost calculator for {}"
+                          .format(func_type.__name__))
         if func_type in self._custom_cost_calculators:
             type_name = func_type.__name__
             old_func_name = self._custom_cost_calculators[func_type].__name__
-            print("Warning: replacing existing custom cost calculator "
-                  "for {} ({})".format(type_name, old_func_name))
+            warnings.warn("replacing existing custom cost calculator "
+                          "for {} ({})".format(type_name, old_func_name))
 
         self._custom_cost_calculators[func_type] = calculator
 
@@ -127,8 +128,8 @@ class ComputationalCostHook(chainer.FunctionHook):
             cal = calculators[func_type]
         else:
             fqn = self._get_fqn(func_type)
-            print("Warning: {} is not yet supported by "
-                  "ComputationalCostHook, ignored".format(fqn))
+            warnings.warn("{} is not yet supported by "
+                          "ComputationalCostHook, ignored".format(fqn))
             self.ignored_layers[name] = {
                 'type': label,
                 'traceback': self._get_stack_trace(),
