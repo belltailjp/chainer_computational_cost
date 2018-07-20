@@ -8,16 +8,35 @@ You can analyze
 * Theoretical amount of floating point arithmetics (FLOPs)
 * Theoretical amount of memory read and write (mread/mwrite)
 
-For each layer.
+For each layer (we call them _computational costs_).
 
 Also, summary of these computational costs for each layer-type,
 and total cost can be calculated.
+
+The computational costs this tool estimates are all **theoretical** number,
+by assuming a most straightforward naive implementation, **for each layer**.
+Therefore, for example, the following factors are **NOT** considered.
+
+* Layer fusion
+  * It is general to fuse Conv-BN-ReLU stack into one layer,
+    that reduces memory transfer significantly.
+* Techniques for speeding-up convolution
+  * Lowering (im2col)
+  * Winograd
+
+In addition, for now, they are not in cosideration either.
+
+* Mixed precision network
+  * For example, keeping conv weights in FP16, saves as FP32
+  * chainer-computational-cost uses data type of input tensor of a layer
 
 
 ## Requirements
 
 * python >= 3
 * chainer >= 4.0.0
+* (optional) texttable >= 1.4.0
+* (optional) pytest >= 3.5.1
 
 
 ## Installation
