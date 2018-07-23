@@ -100,11 +100,10 @@ def test_repeat():
 
 
 def test_custom_cost_calculator():
-    called = False
+    called = {'called': False}
 
     def calc_custom(func, in_data, **kwargs):
-        nonlocal called
-        called = True
+        called['called'] = True  # should use nonlocal but py2 doesn't have it
         return (100, 100, 100, {})
 
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
@@ -117,7 +116,7 @@ def test_custom_cost_calculator():
                 report = cost.layer_report
 
     report = report['AddConstant-1']
-    assert called is True
+    assert called['called'] is True
     assert report['flops'] == 100
     assert report['mread'] == 100 * x.dtype.itemsize
     assert report['mwrite'] == 100 * x.dtype.itemsize
