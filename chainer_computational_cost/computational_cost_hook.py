@@ -1,14 +1,13 @@
 from collections import OrderedDict
 import copy
-import inspect
 import itertools
 import sys
 import traceback
 import warnings
 
 import chainer
-from chainer_computational_cost.cost_calculators import _check_sig
 from chainer_computational_cost.cost_calculators import calculators
+from chainer_computational_cost.cost_calculators import check_signature
 
 
 class ComputationalCostHook(chainer.FunctionHook):
@@ -50,7 +49,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         self.summary_report = OrderedDict()
         self.ignored_layers = OrderedDict()
 
-    def add_custom_cost_calculator(self, calculator):
+    def add_custom_cost_calculator(self, func_type, calculator):
         """Add custom cost calculator function.
 
         This is an interface to extend the hook object so that the hook can
@@ -70,11 +69,9 @@ class ComputationalCostHook(chainer.FunctionHook):
                 (e.g. `fma_1flop`).  You can overwrite existing cost calculator
                 by your custom one.
         """
-        p = inspect.signature(calculator).parameters
-        if not _check_sig(p):
-            raise TypeError("Invalid signature for custom calculator."
-                            "")
-        func_type = p['func'].annotation
+        if not check_signature(calculator):
+            raise TypeError("Invalid signature for custom calculator.")
+
         if func_type in calculators:
             warnings.warn("replacing default cost calculator for {}"
                           .format(func_type.__name__))
@@ -258,9 +255,9 @@ class ComputationalCostHook(chainer.FunctionHook):
         table_report = [header]
         for layer, rep in report.items():
             if unit != '':
-                rep['flops'] /= coeff_flops
+                rep['flops'] = float(rep['flops']) / coeff_flops
                 for c in ('mread', 'mwrite', 'mrw'):
-                    rep[c] /= coeff_bytes
+                    rep[c] = float(rep[c]) / coeff_bytes
             if 'params' in rep:
                 rep['params'] = self._prettify_dict(rep['params'])
             for c in cols:

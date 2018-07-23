@@ -1,10 +1,13 @@
+from chainer_computational_cost.cost_calculators import register
+
 from chainer.functions.normalization.batch_normalization \
     import FixedBatchNormalization
 from chainer.functions.normalization.local_response_normalization \
     import LocalResponseNormalization
 
 
-def calc_fixed_bn(func: FixedBatchNormalization, in_data, **kwargs):
+@register(FixedBatchNormalization)
+def calc_fixed_bn(func, in_data, **kwargs):
     x, _, _, mean, var = in_data
     x = in_data[0]
     n_elements = len(x.flatten())
@@ -14,7 +17,8 @@ def calc_fixed_bn(func: FixedBatchNormalization, in_data, **kwargs):
     return (flops, mread, mwrite, {'eps': func.eps})
 
 
-def calc_lrn(func: LocalResponseNormalization, in_data, **kwargs):
+@register(LocalResponseNormalization)
+def calc_lrn(func, in_data, **kwargs):
     x, = in_data
 
     c = x.shape[1]

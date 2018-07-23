@@ -1,10 +1,13 @@
+from chainer_computational_cost.cost_calculators import register
+
 from chainer.functions.pooling.average_pooling_2d import AveragePooling2D
 from chainer.functions.pooling.max_pooling_2d import MaxPooling2D
 
 from chainer.utils.conv import get_conv_outsize
 
 
-def calc_average_pooling2d(func: AveragePooling2D, in_data, **kwargs):
+@register(AveragePooling2D)
+def calc_average_pooling2d(func, in_data, **kwargs):
     x, = in_data
 
     batch_size, in_c, in_h, in_w = x.shape
@@ -24,7 +27,8 @@ def calc_average_pooling2d(func: AveragePooling2D, in_data, **kwargs):
     return (flops, x.size, out_size, params)
 
 
-def calc_max_pooling2d(func: MaxPooling2D, in_data, **kwargs):
+@register(MaxPooling2D)
+def calc_max_pooling2d(func, in_data, **kwargs):
     x, = in_data
 
     batch_size, in_c, in_h, in_w = x.shape

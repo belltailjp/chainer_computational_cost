@@ -102,7 +102,7 @@ def test_repeat():
 def test_custom_cost_calculator():
     called = False
 
-    def calc_custom(func: AddConstant, in_data, **kwargs):
+    def calc_custom(func, in_data, **kwargs):
         nonlocal called
         called = True
         return (100, 100, 100, {})
@@ -112,7 +112,7 @@ def test_custom_cost_calculator():
     with chainer.using_config('train', False):
         with chainer_computational_cost.ComputationalCostHook() as cost:
             with pytest.warns(UserWarning):
-                cost.add_custom_cost_calculator(calc_custom)
+                cost.add_custom_cost_calculator(AddConstant, calc_custom)
                 x = x + 1
                 report = cost.layer_report
 
@@ -128,13 +128,13 @@ def test_custom_cost_calculator_invalid():
     def calc_no_type_annotation(func, in_data, **kwargs):
         pass
 
-    def calc_not_tuple(func: AddConstant, in_data, **kwargs):
+    def calc_not_tuple(func, in_data, **kwargs):
         return [1, 1, 1, dict()]
 
-    def calc_insufficient_return(func: AddConstant, in_data, **kwargs):
+    def calc_insufficient_return(func, in_data, **kwargs):
         return (1, 1, 1)
 
-    def calc_wrong_type(func: AddConstant, in_data, **kwargs):
+    def calc_wrong_type(func, in_data, **kwargs):
         return (1, 1, 1, None)
 
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
@@ -143,7 +143,7 @@ def test_custom_cost_calculator_invalid():
         with chainer.using_config('train', False):
             with chainer_computational_cost.ComputationalCostHook() as cost:
                 with pytest.raises(TypeError), pytest.warns(UserWarning):
-                    cost.add_custom_cost_calculator(f)
+                    cost.add_custom_cost_calculator(AddConstant, f)
                     x = x + 1
 
 

@@ -1,3 +1,5 @@
+from chainer_computational_cost.cost_calculators import register
+
 import math
 
 from chainer.functions.connection.convolution_2d \
@@ -11,7 +13,8 @@ from chainer.utils.conv import get_conv_outsize
 from chainer.utils.conv import get_deconv_outsize
 
 
-def calc_conv2d(func: Convolution2DFunction, in_data, **kwargs):
+@register(Convolution2DFunction)
+def calc_conv2d(func, in_data, **kwargs):
     x, W = in_data[:2]
     b = in_data[2] if len(in_data) == 3 else None
 
@@ -24,7 +27,7 @@ def calc_conv2d(func: Convolution2DFunction, in_data, **kwargs):
     out_w = get_conv_outsize(in_w, kw, func.sx, func.pw,
                              cover_all=func.cover_all, d=func.dx)
 
-    flops = in_c * int(math.ceil(out_c / g)) * kw * kh * out_w * out_h
+    flops = in_c * int(math.ceil(float(out_c) / g)) * kw * kh * out_w * out_h
     if not kwargs['fma_1flop']:
         flops *= 2
 
@@ -44,7 +47,8 @@ def calc_conv2d(func: Convolution2DFunction, in_data, **kwargs):
     return (flops * batch_size, mread, mwrite, params)
 
 
-def calc_deconv2d(func: Deconvolution2DFunction, in_data, **kwargs):
+@register(Deconvolution2DFunction)
+def calc_deconv2d(func, in_data, **kwargs):
     x, W = in_data[:2]
     b = in_data[2] if len(in_data) == 3 else None
 
@@ -57,7 +61,7 @@ def calc_deconv2d(func: Deconvolution2DFunction, in_data, **kwargs):
     out_w = get_deconv_outsize(in_w, kw, func.sx,
                                func.pw, d=func.dx)
 
-    flops = in_c * int(math.ceil(out_c / g)) * kw * kh * in_w * in_h
+    flops = in_c * int(math.ceil(float(out_c) / g)) * kw * kh * in_w * in_h
     if not kwargs['fma_1flop']:
         flops *= 2
 
@@ -78,7 +82,8 @@ def calc_deconv2d(func: Deconvolution2DFunction, in_data, **kwargs):
     return (flops * batch_size, mread, mwrite, params)
 
 
-def calc_linear(func: LinearFunction, in_data, **kwargs):
+@register(LinearFunction)
+def calc_linear(func, in_data, **kwargs):
     x, W = in_data[:2]
     batch_size, in_c = x.shape
     out_c, _ = W.shape
@@ -100,7 +105,8 @@ def calc_linear(func: LinearFunction, in_data, **kwargs):
     return (flops, mread, mwrite, params)
 
 
-def calc_shift(func: Shift, in_data, **kwargs):
+@register(Shift)
+def calc_shift(func, in_data, **kwargs):
     x, = in_data
     params = {
         'kw': func.kw, 'kh': func.kh,

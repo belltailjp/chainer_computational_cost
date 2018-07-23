@@ -1,3 +1,5 @@
+from chainer_computational_cost.cost_calculators import register
+
 import chainer.cuda
 from chainer.functions.math.basic_math import Add
 from chainer.functions.math.basic_math import AddConstant
@@ -19,33 +21,41 @@ def _calc(func, in_data, **kwargs):
         return (x.size, x.size * 2, x.size, {})
 
 
-def calc_add(func: Add, in_data, **kwargs):
+@register(Add)
+def calc_add(func, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
-def calc_add_constant(func: AddConstant, in_data, **kwargs):
+@register(AddConstant)
+def calc_add_constant(func, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
-def calc_div(func: Div, in_data, **kwargs):
+@register(Div)
+def calc_div(func, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
-def calc_div_from_constant(func: DivFromConstant, in_data, **kwargs):
+@register(DivFromConstant)
+def calc_div_from_constant(func, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
-def calc_mul(func: Mul, in_data, **kwargs):
+@register(Mul)
+def calc_mul(func, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
-def calc_mul_constant(func: MulConstant, in_data, **kwargs):
+@register(MulConstant)
+def calc_mul_constant(func, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
-def calc_sub(func: Sub, in_data, **kwargs):
+@register(Sub)
+def calc_sub(func, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
 
 
-def calc_sub_from_constant(func: SubFromConstant, in_data, **kwargs):
+@register(SubFromConstant)
+def calc_sub_from_constant(func, in_data, **kwargs):
     return _calc(func, in_data, **kwargs)
