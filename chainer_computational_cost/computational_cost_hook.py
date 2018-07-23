@@ -53,22 +53,47 @@ class ComputationalCostHook(chainer.FunctionHook):
         """Add custom cost calculator function.
 
         This is an interface to extend the hook object so that the hook can
-        handle unsupported layers or user-defined custom layers
-        (and overwrite existing calculator).
+        handle unsupported layers, user-defined custom layers, or overwrite
+        behavior of default cost calculator that chainer-computational-cost
+        provides.
+        After registering a pair of a Chainer(-compatible) function type and a
+        custom cost calculator function to a ComputationalCostHook object,
+        it calls the registered calculator if a specified type of chainer
+        function is called inside a computational graph.
 
         Args:
+            func_type: Type object of Chainer function
+                (for example `chainer.functions.activation.relu.ReLU`).
             calculator: Python function object whose signature is
-                `def custom_calculator(func: F.math.basic_math.Add,
-                in_data, **kwargs)`. The first argument name should be `func`,
-                and it has to have type hinting. chainer-computational-cost
-                hook calls your custom cost calculator when the function object
-                matches to the specified type annotation. The second argument
-                is the data fed to the function in the computational graph.
-                The last argument should be `**kwargs`, which can include flags
+                `def custom_calculator(func, in_data, **kwargs)`.
+
+                It has to receive 3 arguments, where the first argument will
+                receive Function or FunctionNode object in computational graph.
+                The second one is the data fed to the function, which is a
+                list of array (numpy.array or cupy.array).
+                The last one is a keyword-argument, which can include flags
                 specified to ComputationalCostHook constructor
-                (e.g. `fma_1flop`).  You can overwrite existing cost calculator
-                by your custom one.
+                (e.g. `fma_1flop`).
+
+                It has to return a 4-element tuple.
+                The 1st element (int) is the amount of of floating point
+                arithmetics that the layer theoretically conducts.
+                The 2nd and 3rd are the theoretical memory transfer of the
+                layer for read and write, respectively. Be careful that the
+                unit is the number of elements in int, not bytes.
+                The last element is a dict of parameters of the layer.
+                For example, cost calculator for Conv2D returns value of `k`,
+                `pad` and so on, which helps user to identify the layer.
+                Any informations can be returned.
+
+                You can overwrite existing cost calculators by your custom one,
+                regardless of it is provided by chainer-computational-cost or
+                a custom cost calculator. Only the last calculator registered
+                to the ComputationalCostHook object will be called.
         """
+        if not isinstance(func_type, type):
+            raise TypeError("Invalid func_type is specified. "
+                            "Please specify type object.")
         if not check_signature(calculator):
             raise TypeError("Invalid signature for custom calculator.")
 

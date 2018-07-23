@@ -293,29 +293,24 @@ In case you need an unsupported layer or you have your custom layer,
 you can insert a cost calculator.
 
 ```python
-def custom_calculator(func: F.math.basic_math.Add, in_data, **kwargs)
+def custom_calculator(func, in_data, **kwargs)
     ...
     return (0, 0, 0)
 
 with chainer.no_backprop_mode(), chainer.using_config('train', False):
     with ComputationalCostHook(fma_1flop=True) as cost:
-        cost.add_custom_cost_calculator(custom_calculator)
+        cost.add_custom_cost_calculator(F.math.basic_math.Add, custom_calculator)
         y = x + x   # Call Add
 
         cost.report['Add-0']    # you can find custom estimation result
 ```
 
-Custom cost calculator has to have the following signature.
-* First positional argument
-  * Name: `func`
-  * Type annotation is required.
-    Specify proper type which you want to calculate by the function.
-    Type should be a subclass of `FunctionNode`.
+A custom cost calculator has to have the following signature.
+* First positional argument:
+  * A `Function` or `FunctionNode` object will be passed.
 * Second positional argument
-  * Name: `in_data`
   * List of data (could be `numpy.array`, `cupy.array` or a scalar) will be fed
 * Third keyword argument
-  * Name: `**kwargs`
   * Some flags will be fed
     * `fma_1flop: bool`, for example
 
@@ -336,8 +331,8 @@ please refer existing implementations located in
 `chainer_computational_cost/cost_calculators/*.py`.
 
 You can overwrite your custom calculator to existing one.
-This is useful when the device or environment you're considering has
-some particular specifications that are different.
+This is useful when for example the device or environment you're considering
+has some special specifications that are different from normal behavior.
 e.g. there is an inference engine that doesn't support inplace `Reshape`,
 whose `mread` and `mwrite` won't be 0.
 
