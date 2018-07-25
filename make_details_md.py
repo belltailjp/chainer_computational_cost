@@ -3,8 +3,9 @@ import os
 import re
 import textwrap
 import urllib
+import warnings
 
-import chainer_computational_cost.cost_calculators
+from chainer_computational_cost.cost_calculators import calculators
 
 
 def inline_eq_to_url(s):
@@ -24,26 +25,45 @@ def eq_to_url(s):
 
 
 if __name__ == "__main__":
-    out_f = open("DETAILS.md", "wt")
+    contents = []
+    table_of_contents = ["# Table of contents", '']
 
     chapters = set()
-    for f in chainer_computational_cost.cost_calculators.calculators.values():
+    for t, f in calculators.items():
         if f.__doc__ is None:
             continue
 
         # "/path/to/activation.py" -> "Activation"
         src_file = os.path.basename(inspect.getfile(f))
-        chapter = os.path.splitext(src_file)[0].capitalize()
-        if chapter not in chapters:
-            out_f.write("# {}\n\n".format(chapter))
-            chapters.add(chapter)
+        module_name = os.path.splitext(src_file)[0]
+        chapter = module_name.replace('_', ' ').capitalize()
 
-        # format
+        # Print h1 heading if this module appears first
+        if chapter not in chapters:
+            contents.append("# {}\n".format(chapter))
+            chapters.add(chapter)
+            fmt = "* [{}](#{})".format(chapter, module_name.replace('_', '-'))
+            table_of_contents.append(fmt)
+
+        # Format docstring content (remove indent, replace equations)
         ds = f.__doc__.splitlines()
         func_name, ds = ds[0], "\n".join(ds[1:])
         ds = textwrap.dedent(ds).strip()
         ds = re.sub(r'\$\$.+\$\$', eq_to_url, ds, flags=re.MULTILINE)
         ds = re.sub(r'\$.+?\$', inline_eq_to_url, ds)
 
-        out_f.write("## {}\n\n".format(func_name))
-        out_f.write("{}\n\n\n".format(ds))
+        contents.append("## {}\n".format(func_name))
+        contents.append("{}\n\n".format(ds))
+
+        # h2 should be same as chainer's function eg PReLUFunction
+        # so that it can automatically generate anchor links
+        if t.__name__ not in func_name:
+            warnings.error("docstring header \"{}\" doesn't contain full"
+                           "function name {}".format(func_name, t.__name__))
+        fmt = "  * [{}](#{})".format(t.__name__, t.__name__.lower())
+        table_of_contents.append(fmt)
+
+    with open("DETAILS.md", "wt") as f:
+        f.write("\n".join(table_of_contents))
+        f.write("\n" * 3)
+        f.write("\n".join(contents))
