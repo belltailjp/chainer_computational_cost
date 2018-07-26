@@ -120,9 +120,9 @@ but chainer-computational-cost ignores such operations.
 
 | Item   | Value |
 |:-------|:------|
-| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%200%20"/> |
-| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%5Csum_%7Bi%7D%20%5C%7Cx_%7Bi%7D%5C%7C"/> |
-| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%5Csum_%7Bi%7D%20%5C%7Cx_%7Bi%7D%5C%7C"/> |
+| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%200%20"/> |
+| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5Csum_%7Bi%7D%20%5C%7Cx_%7Bi%7D%5C%7C"/> |
+| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5Csum_%7Bi%7D%20%5C%7Cx_%7Bi%7D%5C%7C"/> |
 | params | `axis`: concatenation axis |
 
 
@@ -136,9 +136,9 @@ by a custom cost calculator (refer README.md).
 
 | Item   | Value |
 |:-------|:------|
-| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%200%20"/> |
-| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%200%20"/> |
-| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%200%20"/> |
+| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%200%20"/> |
+| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%200%20"/> |
+| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%200%20"/> |
 | params | `in_shape`: input shape, `out_shape`: output shape |
 
 
@@ -179,9 +179,9 @@ chainer-computational-cost only uses the above formula.
 
 | Item   | Value |
 |:-------|:------|
-| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%209%20%5C%7C%20y%20%5C%7C%20"/> |
-| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%5Cmin%284%20%5C%7C%20y%5C%7C%2C%20%5C%7Cx%5C%7C%29%20"/> |
-| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%5C%7C%20y%20%5C%7C%20"/> |
+| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%209%20%5C%7C%20y%20%5C%7C%20"/> |
+| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5Cmin%284%20%5C%7C%20y%5C%7C%2C%20%5C%7Cx%5C%7C%29%20"/> |
+| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20y%20%5C%7C%20"/> |
 | params | `size`: output size |
 
 
@@ -191,9 +191,9 @@ Transpose operation is just copying memory with no FLOPs.
 
 | Item   | Value |
 |:-------|:------|
-| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%200%20"/> |
-| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
-| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
+| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%200%20"/> |
+| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
+| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
 | params | `axes`: transpose axes |
 
 
@@ -404,10 +404,10 @@ Both are 1-dimensional array with <img src="https://latex.codecogs.com/png.latex
 
 | Item          | Value |
 |:--------------|:------|
-| FLOPs(FMA)    | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
-| FLOPs(no-FMA) | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%202%20%5C%7C%20x%20%5C%7C%20"/> |
-| mread         | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%5C%7Cx%5C%7C%20%2B%202%20c_%7B%5Cmathrm%7Bin%7D%7D%20"/> |
-| mwrite        | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
+| FLOPs(FMA)    | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
+| FLOPs(no-FMA) | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%202%20%5C%7C%20x%20%5C%7C%20"/> |
+| mread         | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7Cx%5C%7C%20%2B%202%20c_%7B%5Cmathrm%7Bin%7D%7D%20"/> |
+| mwrite        | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
 | params        | `eps`: epsilon for BN |
 
 
@@ -429,10 +429,10 @@ In total, FLOPs will be sum of them,
 
 | Item          | Value |
 |:--------------|:------|
-| FLOPs(FMA)    | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%285c-1%29hw%20"/> |
-| FLOPs(no-FMA) | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%286c-1%29hw%20"/> |
-| mread         | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20chw%20%3D%3D%20%5C%7C%20x%20%5C%7C%20"/> |
-| mwrite        | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20chw%20%3D%3D%20%5C%7C%20x%20%5C%7C%20"/> |
+| FLOPs(FMA)    | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%285c-1%29hw%20"/> |
+| FLOPs(no-FMA) | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%286c-1%29hw%20"/> |
+| mread         | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20chw%20%3D%3D%20%5C%7C%20x%20%5C%7C%20"/> |
+| mwrite        | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20chw%20%3D%3D%20%5C%7C%20x%20%5C%7C%20"/> |
 | params        | `n`, `k`, `alpha` and `beta` |
 
 

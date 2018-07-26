@@ -27,10 +27,10 @@ def calc_fixed_bn(func, in_data, **kwargs):
 
     | Item          | Value |
     |:--------------|:------|
-    | FLOPs(FMA)    | $ \| x \| $ |
-    | FLOPs(no-FMA) | $ 2 \| x \| $ |
-    | mread         | $ \|x\| + 2 c_{\mathrm{in}} $ |
-    | mwrite        | $ \| x \| $ |
+    | FLOPs(FMA)    | $$ \| x \| $$ |
+    | FLOPs(no-FMA) | $$ 2 \| x \| $$ |
+    | mread         | $$ \|x\| + 2 c_{\mathrm{in}} $$ |
+    | mwrite        | $$ \| x \| $$ |
     | params        | `eps`: epsilon for BN |
     """
     x, _, _, mean, var = in_data
@@ -65,10 +65,10 @@ def calc_lrn(func, in_data, **kwargs):
 
     | Item          | Value |
     |:--------------|:------|
-    | FLOPs(FMA)    | $ (5c-1)hw $ |
-    | FLOPs(no-FMA) | $ (6c-1)hw $ |
-    | mread         | $ chw == \| x \| $ |
-    | mwrite        | $ chw == \| x \| $ |
+    | FLOPs(FMA)    | $$ (5c-1)hw $$ |
+    | FLOPs(no-FMA) | $$ (6c-1)hw $$ |
+    | mread         | $$ chw == \| x \| $$ |
+    | mwrite        | $$ chw == \| x \| $$ |
     | params        | `n`, `k`, `alpha` and `beta` |
     """     # NOQA
     x, = in_data

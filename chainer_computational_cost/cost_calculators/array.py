@@ -17,9 +17,9 @@ def calc_concat(func, in_data, **kwargs):
 
     | Item   | Value |
     |:-------|:------|
-    | FLOPs  | $ 0 $ |
-    | mread  | $ \sum_{i} \|x_{i}\|$ |
-    | mwrite | $ \sum_{i} \|x_{i}\|$ |
+    | FLOPs  | $$ 0 $$ |
+    | mread  | $$ \sum_{i} \|x_{i}\|$$ |
+    | mwrite | $$ \sum_{i} \|x_{i}\|$$ |
     | params | `axis`: concatenation axis |
     """
     size = sum([x.size for x in in_data])
@@ -38,9 +38,9 @@ def calc_reshape(func, in_data, **kwargs):
 
     | Item   | Value |
     |:-------|:------|
-    | FLOPs  | $ 0 $ |
-    | mread  | $ 0 $ |
-    | mwrite | $ 0 $ |
+    | FLOPs  | $$ 0 $$ |
+    | mread  | $$ 0 $$ |
+    | mwrite | $$ 0 $$ |
     | params | `in_shape`: input shape, `out_shape`: output shape |
     """
     x, = in_data
@@ -86,9 +86,9 @@ def calc_resize(func, in_data, **kwargs):
 
     | Item   | Value |
     |:-------|:------|
-    | FLOPs  | $ 9 \| y \| $ |
-    | mread  | $ \min(4 \| y\|, \|x\|) $ |
-    | mwrite | $ \| y \| $ |
+    | FLOPs  | $$ 9 \| y \| $$ |
+    | mread  | $$ \min(4 \| y\|, \|x\|) $$ |
+    | mwrite | $$ \| y \| $$ |
     | params | `size`: output size |
     """
     x, = in_data
@@ -106,9 +106,9 @@ def calc_transpose(func, in_data, **kwargs):
 
     | Item   | Value |
     |:-------|:------|
-    | FLOPs  | $ 0 $ |
-    | mread  | $ \| x \| $ |
-    | mwrite | $ \| x \| $ |
+    | FLOPs  | $$ 0 $$ |
+    | mread  | $$ \| x \| $$ |
+    | mwrite | $$ \| x \| $$ |
     | params | `axes`: transpose axes |
     """
     x, = in_data
