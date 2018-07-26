@@ -111,8 +111,8 @@ def calc_deconv2d(func, in_data, **kwargs):
 
     In order to understand the behavior of this operation and why it is called
     "transposed" convolution, these materials are helpful.
-    * [Up-sampling with Transposed Convolution – Towards Data Science](https://towardsdatascience.com/9ae4f2df52d0)
-    * [Convolution arithmetic tutorial — Theano 1.0.0 documentation](http://deeplearning.net/software/theano/tutorial/conv_arithmetic.html)
+    * [Up-sampling with Transposed Convolution - Towards Data Science](https://towardsdatascience.com/9ae4f2df52d0)
+    * [Convolution arithmetic tutorial - Theano 1.0.0 documentation](http://deeplearning.net/software/theano/tutorial/conv_arithmetic.html)
 
     The theoretical computational cost is
     $2 c_{\mathrm{out}} k_h k_w h_{\mathrm{in}} w_{\mathrm{in}} c_{\mathrm{in}}$FLOPs.
