@@ -33,27 +33,29 @@ def test_reshape():
     assert flops == 0
     assert mread == 0
     assert mwrite == 0
-    assert params == {'shape': (1, -1)}
+    assert params == {'in_shape': (1, 3, 100, 100), 'out_shape': (1, -1)}
 
 
-def test_resize():
+def test_resize_expand():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     f = F.array.resize_images.ResizeImages((15, 15))
     flops, mread, mwrite, params = calculators[type(f)](f, [x])
 
-    # linear interpolation (1-dimensional):
-    # for each output pixel, bring 2 neighboring pixels,
-    # calc weight (3 flops; minus, minus and div),
-    # get new pixel value (4 flops) -> total 9 flops
-    # and do the same in another axis -> *2 -> 18flops/output_pix
-    # https://en.wikipedia.org/wiki/Linear_interpolation
-
-    # mread is not input size,
-    # because for every output pixel 4 corresponding pixels need to be read
-    assert flops == 3 * 15 * 15 * 18
-    assert mread == 3 * 15 * 15 * 4
+    assert flops == 3 * 15 * 15 * 9
+    assert mread == 3 * 10 * 10
     assert mwrite == 3 * 15 * 15
     assert params == {'size': (15, 15)}
+
+
+def test_resize_shrink():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.array.resize_images.ResizeImages((4, 4))
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+
+    assert flops == 3 * 4 * 4 * 9
+    assert mread == 4 * 3 * 4 * 4   # 4(neighbors)*3(channel)*out_w*out_h
+    assert mwrite == 3 * 4 * 4
+    assert params == {'size': (4, 4)}
 
 
 def test_transpose():

@@ -41,6 +41,14 @@ Otherwise, these costs are also exluceded from computational cost.
 * Broadcasting
 
 
+However,
+
+* Duplicated memory access are ignored
+  * In the most naive implementation, for example ResizeImages and Conv will
+    read memory from the same region repeatedly. chainer-computational-cost
+    treats such cases as just reading the entire input only once
+
+
 ## Requirements
 
 * python >= 3

@@ -1,3 +1,5 @@
+from functools import reduce
+
 from chainer_computational_cost.cost_calculators import register
 
 from chainer.functions.activation.prelu import PReLUFunction
@@ -8,20 +10,20 @@ from chainer.functions.activation.softmax import Softmax
 
 @register(PReLUFunction)
 def calc_prelu(func, in_data, **kwargs):
-    """[PReLU](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.prelu.html)
+    """[PReLUFunction](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.prelu.html)
 
     Max operation can be executed by a single instruction.
     chainer-computational-cost considers it as one floating point operation.
 
-    In case $W$ is neither scalar nor same shape as $x$,
-    it is broadcasted internally, but that cost is ignored.
+    In case $W$ is neither scalar nor same shape as $x$, it is broadcasted
+    internally, but cost for broadcasting operation is ignored.
 
     | Item   | Value |
     |:-------|:------|
-    | FLOPs  | $\| x \|$ |
-    | mread  | $\| x \| + \|W\|$, where $w$ is learned parameter |
-    | mwrite | $\| x \|$ |
-    | params | `shape_w`: shape of $W$ |
+    | FLOPs  | $$\| x \|$$ |
+    | mread  | $$\| x \| + \|W\|$$, where $W$ is learned parameter |
+    | mwrite | $$\| x \|$$ |
+    | params | `w_shape`: shape of $W$ |
     """
     x, W = in_data
     return (x.size, x.size + W.size, x.size, {'w_shape': W.shape})
@@ -36,9 +38,9 @@ def calc_relu(func, in_data, **kwargs):
 
     | Item   | Value |
     |:-------|:------|
-    | FLOPs  | $\| x \|$ |
-    | mread  | $\| x \|$ |
-    | mwrite | $\| x \|$ |
+    | FLOPs  | $$\| x \|$$ |
+    | mread  | $$\| x \|$$ |
+    | mwrite | $$\| x \|$$ |
     | params | N/A |
     """
     x, = in_data
@@ -54,9 +56,9 @@ def calc_sigmoid(func, in_data, **kwargs):
 
     | Item   | Value |
     |:-------|:------|
-    | FLOPs  | $4 * \| x \|$ |
-    | mread  | $\| x \|$ |
-    | mwrite | $\| x \|$ |
+    | FLOPs  | $$4 \| x \|$$ |
+    | mread  | $$\| x \|$$ |
+    | mwrite | $$\| x \|$$ |
     | params | N/A |
     """
     x, = in_data
@@ -79,13 +81,14 @@ def calc_softmax(func, in_data, **kwargs):
 
     | Item   | Value |
     |:-------|:------|
-    | FLOPs  | $2 * \| x \| + s * (c - 1)$ |
-    | mread  | $\| x \|$ |
-    | mwrite | $\| x \|$ |
+    | FLOPs  | $$2 \| x \| + s(c-1)$$ |
+    | mread  | $$\| x \|$$ |
+    | mwrite | $$\| x \|$$ |
     | params | `axis`: axis of the softmax operation |
     """
     x, = in_data
     c = x.shape[func.axis]
-    s = [s for i, s in enumerate(x.shape)]
+    s = [s for i, s in enumerate(x.shape) if i != func.axis]
+    s = reduce(lambda x, y: x * y, s)
     flops = 2 * x.size + s * (c - 1)
     return (flops, x.size, x.size, {'axis': func.axis})

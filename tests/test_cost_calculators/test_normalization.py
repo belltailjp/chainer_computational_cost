@@ -22,19 +22,47 @@ def test_fixed_bn():
     assert params == {'eps': f.eps}
 
 
-def test_lrn():     # TODO(belltailjp): verify formula
-    x = np.random.randn(1, 8, 10, 10).astype(np.float32)
+def test_fixed_bn_fma():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    gamma = np.random.randn(3).astype(np.float32)
+    beta = np.random.randn(3).astype(np.float32)
+    mean = np.random.randn(3).astype(np.float32)
+    var = np.random.exponential(size=(3,)).astype(np.float32)
+    f = N.batch_normalization.FixedBatchNormalization()
+    ret = calculators[type(f)](f, [x, gamma, beta, mean, var], fma_1flop=True)
+    flops, mread, mwrite, params = ret
+
+    # in test mode BN, gamma, beta, mean and var will eventually become
+    # channel-wise scale and shift.
+    assert flops == 3 * 10 * 10
+    assert mread == 3 * 10 * 10 + (3 + 3)   # input data, scale and shift param
+    assert mwrite == 3 * 10 * 10
+    assert params == {'eps': f.eps}
+
+
+def test_lrn():
+    c, h, w = 8, 10, 10
+    x = np.random.randn(1, c, h, w).astype(np.float32)
     f = N.local_response_normalization.LocalResponseNormalization()
     flops, mread, mwrite, params = calculators[type(f)](f, [x])
 
-    # square x, neighboring sum
-    c = x.shape[1]
-    s = c * f.k - (f.k // 2) * 2    # sum of k-neighbor channels (no pad)
-    flops_square = x.size
-    flops_neighborsum = x.size * s + x.size * 3  # including *alpha, +k, **beta
-    flops_total = flops_square + flops_neighborsum + x.size
-    assert flops == flops_total
-    assert mread == x.size + x.shape[1] * x.shape[2] * s
+    assert flops == (6 * c - 1) * h * w
+    assert mread == x.size
+    assert mwrite == x.size
+    assert params == {
+        'n': 5, 'k': 2,
+        'alpha': 0.0001, 'beta': 0.75
+    }
+
+
+def test_lrn_fma():
+    c, h, w = 8, 10, 10
+    x = np.random.randn(1, c, h, w).astype(np.float32)
+    f = N.local_response_normalization.LocalResponseNormalization()
+    flops, mread, mwrite, params = calculators[type(f)](f, [x], fma_1flop=True)
+
+    assert flops == (5 * c - 1) * h * w
+    assert mread == x.size
     assert mwrite == x.size
     assert params == {
         'n': 5, 'k': 2,

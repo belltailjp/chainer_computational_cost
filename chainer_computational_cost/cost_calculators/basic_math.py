@@ -19,7 +19,10 @@ def _calc(func, xs, **kwargs):
         s = chainer.cuda.get_array_module(func.value).size(x)
         return (x.size, x.size + s, x.size, {})
     else:
-        return (x.size, x.size * 2, x.size, {})
+        output_size = max(x.size for x in xs)
+        flops = output_size * (len(xs) - 1)
+        mread = sum(x.size for x in xs)
+        return (flops, mread, output_size, {})
 
 
 @register(Add)
@@ -27,14 +30,18 @@ def calc_add(func, in_data, **kwargs):
     """[Add](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.add.html)
 
     Elementwise Add operation.
-    In case shape of inputs are different, broadcast are conducted accordingly.
-    The output memory size is the largest size of the input.
+    In case shape of inputs are different, broadcast will run and then
+    elementwise arithmetic is conducted.
+    Cost for broadcasting is ignored.
+    For simplicity, it assumes all the arrays are first broadcasted to the
+    output size then elementwise sum is calculated.
+    The output size is the largest size of the input.
 
     | Item   | Value |
     |:-------|:------|
-    | FLOPs  | $ 0 $ |
-    | mread  | $ \sum_{i} \| x_{i} \| $ |
-    | mwrite | $ \max_{i}(\| x_{i} \|) $ |
+    | FLOPs  | $$ (N-1) \max_{i}^{N} \| x_{i} \| $$ |
+    | mread  | $$ \sum_{i}^{N} \| x_{i} \| $$ |
+    | mwrite | $$ \max_{i}^{N} \| x_{i} \| $$ |
     | params | N/A |
     """
     return _calc(func, in_data, **kwargs)
@@ -42,123 +49,75 @@ def calc_add(func, in_data, **kwargs):
 
 @register(AddConstant)
 def calc_add_constant(func, in_data, **kwargs):
-    """AddConstant
+    """[AddConstant](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.add.html)
 
-    Elementwise Add operation with constant(s).
-    FLOPs is same as input element size.
+    AddConstant is elementwise Add operation where the operand is a constant
+    (not a chainer.Variable but a numpy.array or a cupy.array).
 
-    If constant is a scalar, the memory read is size of input and 1,
-    Otherwise memory read is 2 times input size.
+    In case shape of inputs are different, broadcast will run and then
+    elementwise arithmetic is conducted.  Cost for broadcasting is ignored.
+    The output size is same as the larger one of either the input ($x$) or the
+    operand (`$c$`).
 
-    |Item|Value|
-    |:---|:---|
-    |FLOPs|size of input|
-    |mread|2 times size of input, or 1 + size of input|
-    |mwrite|size of input|
+    | Item   | Value |
+    |:-------|:------|
+    | FLOPs  | $$ \max(\| x \|, \| c \|) \| $$ |
+    | mread  | $$ \| x \| + \| c \| $$ |
+    | mwrite | $$ \max(\| x \|, \| c \|) \| $$ |
+    | params | N/A |
     """
     return _calc(func, in_data, **kwargs)
 
 
 @register(Div)
 def calc_div(func, in_data, **kwargs):
-    """Div
+    """[Div](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.add.html)
 
-    Elementwise Div operation.
-    FLOPs is same as input element size.
-
-    |Item|Value|
-    |:---|:---|
-    |FLOPs|size of input|
-    |mread|2 times size of input|
-    |mwrite|size of input|
+    See the documentation for [Add](#add)
     """
     return _calc(func, in_data, **kwargs)
 
 
 @register(DivFromConstant)
 def calc_div_from_constant(func, in_data, **kwargs):
-    """DivFromConstant
+    """[DivFromConstant](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.add.html)
 
-    Elementwise DivFrom operation with constant(s).
-    FLOPs is same as input element size.
-
-    If constant is a scalar, the memory read is size of input and 1,
-    Otherwise memory read is 2 times input size.
-
-    |Item|Value|
-    |:---|:---|
-    |FLOPs|size of input|
-    |mread|2 times size of input, or 1 + size of input|
-    |mwrite|size of input|
+    See the documentation for [AddConstant](#addconstant)
     """
     return _calc(func, in_data, **kwargs)
 
 
 @register(Mul)
 def calc_mul(func, in_data, **kwargs):
-    """Mul
+    """[Mul](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.add.html)
 
-    Elementwise Mul operation.
-    FLOPs is same as input element size.
-
-    |Item|Value|
-    |:---|:---|
-    |FLOPs|size of input|
-    |mread|2 times size of input|
-    |mwrite|size of input|
+    See the documentation for [Add](#add)
     """
     return _calc(func, in_data, **kwargs)
 
 
 @register(MulConstant)
 def calc_mul_constant(func, in_data, **kwargs):
-    """MulConstant
+    """[MulConstant](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.add.html)
 
-    Elementwise Mul operation with constant(s).
-    FLOPs is same as input element size.
-
-    If constant is a scalar, the memory read is size of input and 1,
-    Otherwise memory read is 2 times input size.
-
-    |Item|Value|
-    |:---|:---|
-    |FLOPs|size of input|
-    |mread|2 times size of input, or 1 + size of input|
-    |mwrite|size of input|
+    See the documentation for [AddConstant](#addconstant)
     """
     return _calc(func, in_data, **kwargs)
 
 
 @register(Sub)
 def calc_sub(func, in_data, **kwargs):
-    """Sub
+    """[Sub](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.add.html)
 
-    Elementwise Sub operation.
-    FLOPs is same as input element size.
-
-    |Item|Value|
-    |:---|:---|
-    |FLOPs|size of input|
-    |mread|2 times size of input|
-    |mwrite|size of input|
+    See the documentation for [Add](#add)
     """
     return _calc(func, in_data, **kwargs)
 
 
 @register(SubFromConstant)
 def calc_sub_from_constant(func, in_data, **kwargs):
-    """SubFromConstant
+    """[SubFromConstant](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.add.html)
 
-    Elementwise SubFrom operation with constant(s).
-    FLOPs is same as input element size.
-
-    If constant is a scalar, the memory read is size of input and 1,
-    Otherwise memory read is 2 times input size.
-
-    |Item|Value|
-    |:---|:---|
-    |FLOPs|size of input|
-    |mread|2 times size of input, or 1 + size of input|
-    |mwrite|size of input|
+    See the documentation for [AddConstant](#addconstant)
     """
     return _calc(func, in_data, **kwargs)

@@ -33,6 +33,9 @@ def calc_reshape(func, in_data, **kwargs):
     Reshape operation basically neither changes nor reads the data.
     It just makes an array with same data reference with different metadata.
 
+    If your environment cannot do in-place reshape, consider overwriting
+    by a custom cost calculator (refer README.md).
+
     | Item   | Value |
     |:-------|:------|
     | FLOPs  | $ 0 $ |
@@ -41,31 +44,58 @@ def calc_reshape(func, in_data, **kwargs):
     | params | `in_shape`: input shape, `out_shape`: output shape |
     """
     x, = in_data
-    return (0, 0, 0, {'in_shape': x.in_shape, 'out_shape': func.shape})
+    return (0, 0, 0, {'in_shape': x.shape, 'out_shape': func.shape})
 
 
 @register(ResizeImages)
 def calc_resize(func, in_data, **kwargs):
-    """[ResizeImages](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.resize_images.html) TODO: もっと書く
+    """[ResizeImages](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.resize_images.html)
 
-    Current chainer's resize operation only supports bilinear interpolation.
+    In bilinear resize operation, each output pixel value is calculated by
+    4 neighboring source pixels in the input image.
 
-    For each output element,
-    it refers 4 neighboring pixels from the input image.
+    In order to know where the source pixel is, a few index calculations
+    including floating point arithmetic is needed, but these are ignored since
+    chainer-computational-cost ignores such index calculations.
 
-    So the amount of memory read is 4 times the output size.
+    To calculate an output value from 4 source pixels,
+    first 3 FLOPs is spent for horizontal interpolation from 2 source pixels,
+    then another 3 FLOPs for vertical, and finally 3 FLOPs for inter-axis
+    interpolation, therefore in total 9 FLOPs for each output pixel.
 
-    |Item|Value|
-    |:---|:---|
-    |FLOPs|18 * size of output|
-    |mread|4 * size of output|
-    |mwrite|size of output|
+    As for memory access, especially in case of expanding the source image,
+    duplicated memory read will happen. For example, if the input image is 8x8
+    and the output size is 32x32, naively reading memory runs 4096 times,
+    even though the actual size of the input is only 64.
+    In order to avoid such a contradiction, chainer-computational-cost
+    introduces a policy to treat such case as if it loads the entire input
+    data only once.
+
+    Conversely, in case not all the image is needed (for example input is
+    32x32 and the output is 8x8, where memory read is only 128),
+    chainer-computational-cost simply counts 4 memory reads for each output
+    pixel.
+
+    Either smaller number is used for memory read estimation.
+    In other words, memory read is formulated as
+    $ \max(4 \| y\|, \|x\|) $.
+
+    Considering extreme cases like shrinking horizontally and expanding
+    vertically, this logic should be much complicated, but for simplicity
+    chainer-computational-cost only uses the above formula.
+
+    | Item   | Value |
+    |:-------|:------|
+    | FLOPs  | $ 9 \| y \| $ |
+    | mread  | $ \min(4 \| y\|, \|x\|) $ |
+    | mwrite | $ \| y \| $ |
+    | params | `size`: output size |
     """
     x, = in_data
     batch_size, in_c = x.shape[:2]
     out_size = batch_size * in_c * func.out_H * func.out_W
     params = {'size': (func.out_H, func.out_W)}
-    return (out_size * 18, out_size * 4, out_size, params)
+    return (out_size * 9, min(out_size * 4, x.size), out_size, params)
 
 
 @register(Transpose)

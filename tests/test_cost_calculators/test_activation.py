@@ -43,4 +43,15 @@ def test_softmax():
     assert flops == x.size + (x.size - 1) + x.size
     assert mread == x.size
     assert mwrite == x.size
-    assert params == dict()
+    assert params == {'axis': 1}
+
+
+def test_softmax_axis():
+    x = np.random.randn(1, 32, 128).astype(np.float32)
+    f = F.activation.softmax.Softmax(axis=2)
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+    # flops: exp term, sum term, div term
+    assert flops == x.size + 32 * (128 - 1) + x.size
+    assert mread == x.size
+    assert mwrite == x.size
+    assert params == {'axis': 2}
