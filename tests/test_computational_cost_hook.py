@@ -166,6 +166,16 @@ def test_report_ignored_layer():
             assert 'DummyFunc' == list(cost.ignored_layers.values())[0]['type']
 
 
+def test_blank_case():
+    # Even if nothing happens while the hook lifetime,
+    # it should not hang but show only a warning
+    with chainer_computational_cost.ComputationalCostHook() as ccost:
+        with pytest.warns(UserWarning):
+            ccost.show_report()
+        with pytest.warns(UserWarning):
+            ccost.show_summary_report()
+
+
 def test_show_report_unit_and_digits():
     conv = L.Convolution2D(32, 64, ksize=3, pad=1)
     x = np.random.randn(8, 32, 128, 128).astype(np.float32)

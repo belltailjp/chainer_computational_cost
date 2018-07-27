@@ -234,6 +234,10 @@ class ComputationalCostHook(chainer.FunctionHook):
                 affect to the precision of the summary row in the bottom of the
                 table. This is because summary is calculated *before* rounding.
         """
+        if len(self.summary_report) == 0:
+            warnings.warn("No chainer function is caught during "
+                          "lifetime of the hook")
+            return
         # bring 'total' to the last
         report = copy.deepcopy(self.summary_report)
         report['total'] = report.pop('total')
@@ -266,6 +270,10 @@ class ComputationalCostHook(chainer.FunctionHook):
                 affect to the precision of the summary row in the bottom of the
                 table. This is because summary is calculated *before* rounding.
         """
+        if len(self.layer_report) == 0:
+            warnings.warn("No chainer function is caught during "
+                          "lifetime of the hook")
+            return
         # add 'total' to the last
         total = {'total': self.summary_report['total']}
         report = itertools.chain(self.layer_report.items(), total.items())
