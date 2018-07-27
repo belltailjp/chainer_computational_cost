@@ -17,8 +17,11 @@ def test_conv2d_with_bias_fma():
     x = np.random.randn(1, c_in, h_in, w_in).astype(np.float32)
     W = np.random.randn(c_out, c_in, k, k).astype(np.float32)
     b = np.random.randn(c_out).astype(np.float32)
-    f = Convolution2DFunction(pad=1)
+    f = Convolution2DFunction(pad=(np.int64(1), np.int64(1)))
     flops, mr, mw, params = calculators[type(f)](f, [x, W, b], fma_1flop=True)
+    assert type(flops) is int and type(mr) is int and type(mw) is int
+    assert type(params) is dict
+
     assert f.apply([x, W, b])[0].shape == (1, c_out, h_out, w_out)
     assert flops == (c_in * c_out * k * k * h_out * w_out)
     assert mr == c_in * h_in * w_in + c_out * c_in * k * k + c_out
@@ -27,6 +30,11 @@ def test_conv2d_with_bias_fma():
         'k': k, 's': 1, 'p': 1, 'd': 1,
         'groups': 1, 'nobias': False
     }
+    assert type(params['k']) is int
+    assert type(params['s']) is int
+    assert type(params['p']) is int
+    assert type(params['d']) is int
+    assert type(params['groups']) is int
 
 
 def test_conv2d_nobias_fma():
@@ -132,6 +140,9 @@ def test_deconv2d_with_bias_fma():
     b = np.random.randn(c_out).astype(np.float32)
     f = Deconvolution2DFunction(stride=2, pad=0)
     flops, mr, mw, params = calculators[type(f)](f, [x, W, b], fma_1flop=True)
+    assert type(flops) is int and type(mr) is int and type(mw) is int
+    assert type(params) is dict
+
     assert f.apply([x, W, b])[0].shape == (1, c_out, h_out, w_out)
     assert flops == c_in * c_out * k * k * h_in * w_in
     assert mr == c_in * h_in * w_in + c_in * c_out * k * k + c_out
@@ -222,6 +233,9 @@ def test_linear_nobias_fma():
     w = np.random.randn(20, 10).astype(np.float32)
     f = LinearFunction()
     flops, mr, mw, params = calculators[type(f)](f, [x, w], fma_1flop=True)
+    assert type(flops) is int and type(mr) is int and type(mw) is int
+    assert type(params) is dict
+
     assert flops == 10 * 20
     assert mr == 10 + 10 * 20        # input data, and weight matrix
     assert mw == 20
@@ -233,7 +247,6 @@ def test_linear_nobias_no_fma():
     w = np.random.randn(20, 10).astype(np.float32)
     f = LinearFunction()
     flops, mr, mw, params = calculators[type(f)](f, [x, w], fma_1flop=False)
-
     # for each output neuron, weight multiplication is applied 10 times and
     # addition (10-1) times.
     assert flops == (10 + 10 - 1) * 20
@@ -257,8 +270,11 @@ def test_linear_withbias_fma():
 def test_shift():
     x = np.random.randn(1, 32, 10, 10).astype(np.float32)
     f = F.connection.shift.Shift(ksize=3, dilate=1)
-    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+    flops, mr, mw, params = calculators[type(f)](f, [x])
+    assert type(flops) is int and type(mr) is int and type(mw) is int
+    assert type(params) is dict
+
     assert flops == 0     # exclude index calculation
-    assert mread == x.size
-    assert mwrite == x.size
+    assert mr == x.size
+    assert mw == x.size
     assert params == {'k': 3, 'd': 1}

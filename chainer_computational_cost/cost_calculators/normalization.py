@@ -82,7 +82,7 @@ def calc_lrn(func, in_data, **kwargs):
     mread = x.size
     mwrite = x.size
     params = {
-        'n': func.n, 'k': func.k,
-        'alpha': func.alpha, 'beta': func.beta
+        'n': int(func.n), 'k': int(func.k),
+        'alpha': float(func.alpha), 'beta': float(func.beta)
     }
     return (flops, mread, mwrite, params)
