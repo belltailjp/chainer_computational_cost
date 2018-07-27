@@ -23,7 +23,12 @@ is written in [README.md](README.md).
   * [Reshape](#reshape)
   * [ResizeImages](#resizeimages)
   * [Transpose](#transpose)
-* [Basic math](#basic-math)
+* [Connection](#connection)
+  * [Convolution2DFunction](#convolution2dfunction)
+  * [Deconvolution2DFunction](#deconvolution2dfunction)
+  * [LinearFunction](#linearfunction)
+  * [Shift](#shift)
+* [Math](#math)
   * [Add](#add)
   * [AddConstant](#addconstant)
   * [Div](#div)
@@ -36,11 +41,6 @@ is written in [README.md](README.md).
   * [Min](#min)
   * [ArgMax](#argmax)
   * [ArgMin](#argmin)
-* [Connection](#connection)
-  * [Convolution2DFunction](#convolution2dfunction)
-  * [Deconvolution2DFunction](#deconvolution2dfunction)
-  * [LinearFunction](#linearfunction)
-  * [Shift](#shift)
 * [Normalization](#normalization)
   * [FixedBatchNormalization](#fixedbatchnormalization)
   * [LocalResponseNormalization](#localresponsenormalization)
@@ -201,7 +201,125 @@ Transpose operation is just copying memory with no FLOPs.
 | params | `axes`: transpose axes |
 
 
-## Basic math
+## Connection
+
+### [Convolution2DFunction](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.convolution_2d.html)
+
+Convolution operator essentially calculates an output value by convolving
+the input feature map by a corresponding filter whose size is
+<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20k_%7Bh%7D%20k_%7Bw%7D%20%7Bc_%7B%5Cmathrm%7Bin%7D%7D%7D"/>.
+The computational cost is <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20k_%7Bh%7D%20k_%7Bw%7D%20%7Bc_%7B%5Cmathrm%7Bin%7D%7D%7D%20-%201"/> FLOPs
+for each output pixel. Including bias, it becomes simply
+<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20k_%7Bh%7D%20k_%7Bw%7D%20%7Bc_%7B%5Cmathrm%7Bin%7D%7D%7D"/>.
+So in total <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%202%20k_%7Bh%7D%20k_%7Bw%7D%20%7Bc_%7B%5Cmathrm%7Bin%7D%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20"/>.
+Here, output size <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20h_%7B%5Cmathrm%7Bout%7D%7D"/> and <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20w_%7B%5Cmathrm%7Bout%7D%7D"/> can be
+calculated by
+[chainer.utils.get_conv_outsize](https://docs.chainer.org/en/v4.3.0/reference/util/generated/chainer.utils.get_conv_outsize.html).
+
+If there is no bias, it will be
+<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%282%20k_%7Bh%7D%20k_%7Bw%7D%20%7Bc_%7B%5Cmathrm%7Bin%7D%7D%7D-1%29%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20"/> FLOPs.
+
+In case of grouped convolution, it can be considered as just concatenating
+result of convolution whose input has <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c_%7B%5Cmathrm%7Bin%7D%7D/G"/> channels and
+output is <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c_%7B%5Cmathrm%7Bout%7D%7D/G"/> channels.
+Each group costs <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%202%20k_%7Bh%7D%20k_%7Bw%7D%20c_%7B%5Cmathrm%7Bin%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D/G%5E2%20"/> FLOPs/group,
+so in total <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%202%20k_%7Bh%7D%20k_%7Bw%7D%20c_%7B%5Cmathrm%7Bin%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20/%20G%20"/> FLOPs.
+
+If `fma_1flop` is set to `True`,
+it will be <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20k_%7Bh%7D%20k_%7Bw%7D%20c_%7B%5Cmathrm%7Bin%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20/%20G%20"/> FLOPs.
+Exsistence of bias does not matter this case.
+
+Dilated convolution does not change theoretical computational cost
+explained above, although it usually significantly affects to the actual
+performance.
+
+Although a source pixel can be read multiple times in the most native
+convolution implementation, chainer-computational-cost counts them only
+once, therefore the memory read is counted as if the entire input data and
+parameters (weights, biases) are loaded from memory only at once.
+Padding is ignored, too.
+
+FMA option can be switched by `fma_1flop: bool` keyword argument specified
+to ComputationalCostHook.
+
+| Item                | Value |
+|:--------------------|:------|
+| FLOPs(FMA)          | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20c_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_%7Bh%7D%20k_%7Bw%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20/%20G%20"/> |
+| FLOPs(no-FMA)       | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%202%20c_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_%7Bh%7D%20k_%7Bw%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20/%20G%20"/> |
+| FLOPs(no-FMA nobias)| <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20G%282%20%28c_%7B%5Cmathrm%7Bin%7D%7D/G%29%20%28c_%7B%5Cmathrm%7Bout%7D%7D/G%29-1%29%20k_%7Bh%7D%20k_%7Bw%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20"/> |
+| mread               | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C%20%2B%20%5C%7C%20W%20%5C%7C%20%2B%20%5C%7C%20b%20%5C%7C"/> |
+| mwrite              | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20c_%7B%5Cmathrm%7Bout%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D"/> |
+| params              | conv parameters `k`, `s`, `p`, `d`, `groups`, `nobias` |
+
+
+### [Deconvolution2DFunction](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.deconvolution_2d.html)
+
+Deconvolution, also as known as transposed convolution, can be thought as
+going backward to the convolution operation.
+Each input pixel is multiplied to convolution filter kernel
+(<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28c_%7B%5Cmathrm%7Bout%7D%7D%2C%20k_h%2C%20k_w%29"/>).
+Its result is summed up on the output tensor, among adjacent result and
+result of other filters (there are <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c_%7B%5Cmathrm%7Bin%7D%7D"/> filters),
+then bias is added if exists.
+
+In order to understand the behavior of this operation and why it is called
+"transposed" convolution, these materials are helpful.
+* [Up-sampling with Transposed Convolution - Towards Data Science](https://towardsdatascience.com/9ae4f2df52d0)
+* [Convolution arithmetic tutorial - Theano 1.0.0 documentation](http://deeplearning.net/software/theano/tutorial/conv_arithmetic.html)
+
+The theoretical computational cost is
+<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_h%20k_w%20h_%7B%5Cmathrm%7Bin%7D%7D%20w_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bin%7D%7D"/>FLOPs.
+
+In case of `groups` is not 1, similarly to convolution, it becomes
+<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_h%20k_w%20h_%7B%5Cmathrm%7Bin%7D%7D%20w_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bin%7D%7D%20/%20G"/> FLOPs.
+
+| Item                | Value |
+|:--------------------|:------|
+| FLOPs(FMA)          | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%202%20c_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_h%20k_w%20h_%7B%5Cmathrm%7Bin%7D%7D%20w_%7B%5Cmathrm%7Bin%7D%7D%20/%20G%20"/> |
+| FLOPs(no-FMA)       | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20c_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_h%20k_w%20h_%7B%5Cmathrm%7Bin%7D%7D%20w_%7B%5Cmathrm%7Bin%7D%7D%20/%20G%20"/> |
+| mread               | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C%20%2B%20%5C%7C%20W%20%5C%7C%20%2B%20%5C%7C%20b%20%5C%7C"/> |
+| mwrite              | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20c_%7B%5Cmathrm%7Bout%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D"/> |
+| params              | conv parameters `k`, `s`, `p`, `d`, `groups`, `nobias` |
+
+
+### [LinearFunction](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.linear.html)
+
+Let <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20n_%7B%5Cmathrm%7Bin%7D%7D"/> be the input size and <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20n_%7B%5Cmathrm%7Bout%7D%7D"/> be the
+output size.
+Each output value is calculated by <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20n_%7B%5Cmathrm%7Bin%7D%7D"/> product and
+<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20n_%7B%5Cmathrm%7Bin%7D%7D%20-%201"/> sum operations.
+So, in case `fma_1flop==False`, <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20n_%7B%5Cmathrm%7Bin%7D%7D%20-%201"/> FLOPs/element,
+or <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20%2A%20n_%7B%5Cmathrm%7Bin%7D%7D"/> if there is bias.
+In FMA mode <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20n_%7B%5Cmathrm%7Bin%7D%7D"/> FLOPs (regardress of existence of bias).
+
+FMA option can be switched by `fma_1flop: bool` keyword argument specified
+to ComputationalCostHook.
+
+| Item                  | Value |
+|:----------------------|:------|
+| FLOPs(FMA)            | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20n_%7B%5Cmathrm%7Bin%7D%7D%20n_%7B%5Cmathrm%7Bout%7D%7D%20%5C%7C"/> |
+| FLOPs(no-FMA)         | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%202%20n_%7B%5Cmathrm%7Bin%7D%7D%20n_%7B%5Cmathrm%7Bout%7D%7D%20%5C%7C"/> |
+| FLOPs(no-FMA no-bias) | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20%282%20n_%7B%5Cmathrm%7Bin%7D%7D%20-%201%29%20n_%7B%5Cmathrm%7Bout%7D%7D%20%5C%7C"/> |
+| mread                 | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7Cx%5C%7C%20%2B%20%5C%7CW%5C%7C%20%2B%20%5C%7Cb%5C%7C"/>, where <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20W"/> and <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20b"/> are learned parameter |
+| mwrite                | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7Cy%5C%7C"/> |
+| params                | `nobias` |
+
+
+### [Shift](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.shift.html)
+
+Shift only conducts memory read, index calculation and memory write.
+There might be unnecessary memory read around corners, but for simplicity
+chainer-computational-cost treats it as just reading the entire data.
+
+| Item   | Value |
+|:-------|:------|
+| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%200%20"/> |
+| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C"/> |
+| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C"/> |
+| params | shift parameters `k` and `d` |
+
+
+## Math
 
 ### [Add](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.add.html)
 
@@ -320,124 +438,6 @@ See the documentation for [Max](#max).
 Theoretical cost of Argmin is exactly same as Min/Max, except that
 Argmax can receive only one axis.
 See the documentation for [Max](#max).
-
-
-## Connection
-
-### [Convolution2DFunction](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.convolution_2d.html)
-
-Convolution operator essentially calculates an output value by convolving
-the input feature map by a corresponding filter whose size is
-<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20k_%7Bh%7D%20k_%7Bw%7D%20%7Bc_%7B%5Cmathrm%7Bin%7D%7D%7D"/>.
-The computational cost is <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20k_%7Bh%7D%20k_%7Bw%7D%20%7Bc_%7B%5Cmathrm%7Bin%7D%7D%7D%20-%201"/> FLOPs
-for each output pixel. Including bias, it becomes simply
-<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20k_%7Bh%7D%20k_%7Bw%7D%20%7Bc_%7B%5Cmathrm%7Bin%7D%7D%7D"/>.
-So in total <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%202%20k_%7Bh%7D%20k_%7Bw%7D%20%7Bc_%7B%5Cmathrm%7Bin%7D%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20"/>.
-Here, output size <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20h_%7B%5Cmathrm%7Bout%7D%7D"/> and <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20w_%7B%5Cmathrm%7Bout%7D%7D"/> can be
-calculated by
-[chainer.utils.get_conv_outsize](https://docs.chainer.org/en/v4.3.0/reference/util/generated/chainer.utils.get_conv_outsize.html).
-
-If there is no bias, it will be
-<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20%282%20k_%7Bh%7D%20k_%7Bw%7D%20%7Bc_%7B%5Cmathrm%7Bin%7D%7D%7D-1%29%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20"/> FLOPs.
-
-In case of grouped convolution, it can be considered as just concatenating
-result of convolution whose input has <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c_%7B%5Cmathrm%7Bin%7D%7D/G"/> channels and
-output is <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c_%7B%5Cmathrm%7Bout%7D%7D/G"/> channels.
-Each group costs <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%202%20k_%7Bh%7D%20k_%7Bw%7D%20c_%7B%5Cmathrm%7Bin%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D/G%5E2%20"/> FLOPs/group,
-so in total <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%202%20k_%7Bh%7D%20k_%7Bw%7D%20c_%7B%5Cmathrm%7Bin%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20/%20G%20"/> FLOPs.
-
-If `fma_1flop` is set to `True`,
-it will be <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%20k_%7Bh%7D%20k_%7Bw%7D%20c_%7B%5Cmathrm%7Bin%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20/%20G%20"/> FLOPs.
-Exsistence of bias does not matter this case.
-
-Dilated convolution does not change theoretical computational cost
-explained above, although it usually significantly affects to the actual
-performance.
-
-Although a source pixel can be read multiple times in the most native
-convolution implementation, chainer-computational-cost counts them only
-once, therefore the memory read is counted as if the entire input data and
-parameters (weights, biases) are loaded from memory only at once.
-Padding is ignored, too.
-
-FMA option can be switched by `fma_1flop: bool` keyword argument specified
-to ComputationalCostHook.
-
-| Item                | Value |
-|:--------------------|:------|
-| FLOPs(FMA)          | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20c_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_%7Bh%7D%20k_%7Bw%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20/%20G%20"/> |
-| FLOPs(no-FMA)       | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%202%20c_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_%7Bh%7D%20k_%7Bw%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20/%20G%20"/> |
-| FLOPs(no-FMA nobias)| <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20G%282%20%28c_%7B%5Cmathrm%7Bin%7D%7D/G%29%20%28c_%7B%5Cmathrm%7Bout%7D%7D/G%29-1%29%20k_%7Bh%7D%20k_%7Bw%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D%20"/> |
-| mread               | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C%20%2B%20%5C%7C%20W%20%5C%7C%20%2B%20%5C%7C%20b%20%5C%7C"/> |
-| mwrite              | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20c_%7B%5Cmathrm%7Bout%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D"/> |
-| params              | conv parameters `k`, `s`, `p`, `d`, `groups`, `nobias` |
-
-
-### [Deconvolution2DFunction](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.deconvolution_2d.html)
-
-Deconvolution, also as known as transposed convolution, can be thought as
-going backward to the convolution operation.
-Each input pixel is multiplied to convolution filter kernel
-(<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28c_%7B%5Cmathrm%7Bout%7D%7D%2C%20k_h%2C%20k_w%29"/>).
-Its result is summed up on the output tensor, among adjacent result and
-result of other filters (there are <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c_%7B%5Cmathrm%7Bin%7D%7D"/> filters),
-then bias is added if exists.
-
-In order to understand the behavior of this operation and why it is called
-"transposed" convolution, these materials are helpful.
-* [Up-sampling with Transposed Convolution - Towards Data Science](https://towardsdatascience.com/9ae4f2df52d0)
-* [Convolution arithmetic tutorial - Theano 1.0.0 documentation](http://deeplearning.net/software/theano/tutorial/conv_arithmetic.html)
-
-The theoretical computational cost is
-<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_h%20k_w%20h_%7B%5Cmathrm%7Bin%7D%7D%20w_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bin%7D%7D"/>FLOPs.
-
-In case of `groups` is not 1, similarly to convolution, it becomes
-<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_h%20k_w%20h_%7B%5Cmathrm%7Bin%7D%7D%20w_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bin%7D%7D%20/%20G"/> FLOPs.
-
-| Item                | Value |
-|:--------------------|:------|
-| FLOPs(FMA)          | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%202%20c_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_h%20k_w%20h_%7B%5Cmathrm%7Bin%7D%7D%20w_%7B%5Cmathrm%7Bin%7D%7D%20/%20G%20"/> |
-| FLOPs(no-FMA)       | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20c_%7B%5Cmathrm%7Bin%7D%7D%20c_%7B%5Cmathrm%7Bout%7D%7D%20k_h%20k_w%20h_%7B%5Cmathrm%7Bin%7D%7D%20w_%7B%5Cmathrm%7Bin%7D%7D%20/%20G%20"/> |
-| mread               | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C%20%2B%20%5C%7C%20W%20%5C%7C%20%2B%20%5C%7C%20b%20%5C%7C"/> |
-| mwrite              | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20c_%7B%5Cmathrm%7Bout%7D%7D%20h_%7B%5Cmathrm%7Bout%7D%7D%20w_%7B%5Cmathrm%7Bout%7D%7D"/> |
-| params              | conv parameters `k`, `s`, `p`, `d`, `groups`, `nobias` |
-
-
-### [LinearFunction](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.linear.html)
-
-Let <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20n_%7B%5Cmathrm%7Bin%7D%7D"/> be the input size and <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20n_%7B%5Cmathrm%7Bout%7D%7D"/> be the
-output size.
-Each output value is calculated by <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20n_%7B%5Cmathrm%7Bin%7D%7D"/> product and
-<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20n_%7B%5Cmathrm%7Bin%7D%7D%20-%201"/> sum operations.
-So, in case `fma_1flop==False`, <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20n_%7B%5Cmathrm%7Bin%7D%7D%20-%201"/> FLOPs/element,
-or <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202%20%2A%20n_%7B%5Cmathrm%7Bin%7D%7D"/> if there is bias.
-In FMA mode <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20n_%7B%5Cmathrm%7Bin%7D%7D"/> FLOPs (regardress of existence of bias).
-
-FMA option can be switched by `fma_1flop: bool` keyword argument specified
-to ComputationalCostHook.
-
-| Item                  | Value |
-|:----------------------|:------|
-| FLOPs(FMA)            | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20n_%7B%5Cmathrm%7Bin%7D%7D%20n_%7B%5Cmathrm%7Bout%7D%7D%20%5C%7C"/> |
-| FLOPs(no-FMA)         | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%202%20n_%7B%5Cmathrm%7Bin%7D%7D%20n_%7B%5Cmathrm%7Bout%7D%7D%20%5C%7C"/> |
-| FLOPs(no-FMA no-bias) | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20%282%20n_%7B%5Cmathrm%7Bin%7D%7D%20-%201%29%20n_%7B%5Cmathrm%7Bout%7D%7D%20%5C%7C"/> |
-| mread                 | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7Cx%5C%7C%20%2B%20%5C%7CW%5C%7C%20%2B%20%5C%7Cb%5C%7C"/>, where <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20W"/> and <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20b"/> are learned parameter |
-| mwrite                | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7Cy%5C%7C"/> |
-| params                | `nobias` |
-
-
-### [Shift](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.shift.html)
-
-Shift only conducts memory read, index calculation and memory write.
-There might be unnecessary memory read around corners, but for simplicity
-chainer-computational-cost treats it as just reading the entire data.
-
-| Item   | Value |
-|:-------|:------|
-| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%200%20"/> |
-| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C"/> |
-| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C"/> |
-| params | shift parameters `k` and `d` |
 
 
 ## Normalization
