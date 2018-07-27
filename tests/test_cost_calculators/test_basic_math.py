@@ -55,3 +55,98 @@ def test_sub():
     assert mread == (3 * 10 * 10) * 2
     assert mwrite == 3 * 10 * 10
     assert params == dict()
+
+
+def test_max_noaxis():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.math.minmax.Max()
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+    assert type(flops) is int and type(mread) is int and type(mwrite) is int
+    assert type(params) is dict
+
+    assert flops == 3 * 10 * 10 - 1
+    assert mread == 3 * 10 * 10
+    assert mwrite == 1
+    assert params == {'axis': None}
+
+
+def test_max_axis():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.math.minmax.Max(axis=2)
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+    assert type(flops) is int and type(mread) is int and type(mwrite) is int
+    assert type(params) is dict
+
+    assert flops == 3 * (10 - 1) * 10
+    assert mread == 3 * 10 * 10
+    assert mwrite == 3 * 10
+    assert params == {'axis': (2,)}
+
+
+def test_max_axes():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.math.minmax.Max(axis=(1, 2))
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+    assert type(flops) is int and type(mread) is int and type(mwrite) is int
+    assert type(params) is dict
+
+    assert flops == (3 - 1) * 10 * 10 + (10 - 1) * 10
+    assert mread == 3 * 10 * 10
+    assert mwrite == 10
+    assert params == {'axis': (1, 2)}
+
+
+def test_max_axes_rev():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.math.minmax.Max(axis=(2, 1))
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+    assert type(flops) is int and type(mread) is int and type(mwrite) is int
+    assert type(params) is dict
+
+    # Completely equivament to axis=(1, 2) case
+    assert flops == (3 - 1) * 10 * 10 + (10 - 1) * 10
+    assert mread == 3 * 10 * 10
+    assert mwrite == 10
+    assert params == {'axis': (2, 1)}
+
+
+def test_max_all_axes():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.math.minmax.Max(axis=(0, 1, 2, 3))
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+    assert type(flops) is int and type(mread) is int and type(mwrite) is int
+    assert type(params) is dict
+
+    # Completely equivament to axis=None case
+    assert flops == 3 * 10 * 10 - 1
+    assert mread == 3 * 10 * 10
+    assert mwrite == 1
+    assert params == {'axis': (0, 1, 2, 3)}
+
+
+def test_argmax():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.math.minmax.ArgMax(axis=1)
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+    assert type(flops) is int and type(mread) is int and type(mwrite) is int
+    assert type(params) is dict
+
+    # exactly same as min/max (axis=1)
+    assert flops == (3 - 1) * 10 * 10
+    assert mread == 3 * 10 * 10
+    assert mwrite == 10 * 10
+    assert params == {'axis': 1}
+
+
+def test_argmin():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.math.minmax.ArgMin(axis=1)
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+    assert type(flops) is int and type(mread) is int and type(mwrite) is int
+    assert type(params) is dict
+
+    # exactly same as min/max
+    assert flops == (3 - 1) * 10 * 10
+    assert mread == 3 * 10 * 10
+    assert mwrite == 10 * 10
+    assert params == {'axis': 1}

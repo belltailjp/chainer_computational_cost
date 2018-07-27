@@ -9,6 +9,10 @@ from chainer.functions.math.basic_math import Mul
 from chainer.functions.math.basic_math import MulConstant
 from chainer.functions.math.basic_math import Sub
 from chainer.functions.math.basic_math import SubFromConstant
+from chainer.functions.math.minmax import ArgMax
+from chainer.functions.math.minmax import ArgMin
+from chainer.functions.math.minmax import Max
+from chainer.functions.math.minmax import Min
 
 
 def _calc(func, xs, **kwargs):
@@ -121,3 +125,92 @@ def calc_sub_from_constant(func, in_data, **kwargs):
     See the documentation for [AddConstant](#addconstant)
     """
     return _calc(func, in_data, **kwargs)
+
+
+def _calc_minmax(func, x, **kwargs):
+    if func.axis is None:
+        return (x.size - 1, x.size, 1, {'axis': None})
+    else:
+        current_size = x.size
+        flops = 0
+        axes = func.axis
+        if type(axes) is not tuple:  # argmin/argmax have only 1 int value
+            axes = (axes,)
+        for axis in axes:
+            d = x.shape[axis]
+            current_size //= d
+            flops += (d - 1) * current_size
+        return (flops, x.size, current_size, {'axis': func.axis})
+
+
+@register(Max)
+def calc_max(func, in_data, **kwargs):
+    """[Max](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.max.html)
+
+    In case `axis` is `None`, it just calculates maximum value of a tensor,
+    which costs simply $\|x\|-1$.
+
+    Here, let's consider a 4-dimensional array whose shape is $(A, B, C, D)$.
+    When `axis` is set to `(1, 2)`,
+    * First it calculates max over the axis 1, which is $(B-1)ACD$ FLOPs,
+      and this makes a tensor shaped $(A, C, D)$
+    * Next, max over the original axis 2 is conducted in $(C-1)AD$ FLOPs,
+      and a tensor $(A, D)$ is remained.
+    Total FLOPs is just a sum of above, and the output is $(A, D)$.
+
+    Therefore, FLOPs is calculated by the following algorithm.
+
+    ```
+    input: x, axes
+    output: f (FLOPs), s (output size)
+    s <- x.size
+    f <- 0
+    foreach i in axes
+        d <- x.shape
+        s <- s / d
+        f <- f + (d-1)s
+    ```
+
+    | Item   | Value |
+    |:-------|:------|
+    | FLOPs  | See the above explanation |
+    | mread  | $$ \| x \|  $$ |
+    | mwrite | See the above explanation |
+    | params | `axis` |
+    """
+    x, = in_data
+    return _calc_minmax(func, x, **kwargs)
+
+
+@register(Min)
+def calc_min(func, in_data, **kwargs):
+    """[Min](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.min.html)
+
+    See the documentation for [Max](#max).
+    """
+    x, = in_data
+    return _calc_minmax(func, x, **kwargs)
+
+
+@register(ArgMax)
+def calc_argmax(func, in_data, **kwargs):
+    """[ArgMax](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.argmax.html)
+
+    Theoretical cost of Argmax is exactly same as Min/Max, except that
+    Argmax can receive only one axis.
+    See the documentation for [Max](#max).
+    """
+    x, = in_data
+    return _calc_minmax(func, x, **kwargs)
+
+
+@register(ArgMin)
+def calc_argmin(func, in_data, **kwargs):
+    """[ArgMin](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.argmin.html)
+
+    Theoretical cost of Argmin is exactly same as Min/Max, except that
+    Argmax can receive only one axis.
+    See the documentation for [Max](#max).
+    """
+    x, = in_data
+    return _calc_minmax(func, x, **kwargs)

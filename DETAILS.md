@@ -32,6 +32,10 @@ is written in [README.md](README.md).
   * [MulConstant](#mulconstant)
   * [Sub](#sub)
   * [SubFromConstant](#subfromconstant)
+  * [Max](#max)
+  * [Min](#min)
+  * [ArgMax](#argmax)
+  * [ArgMin](#argmin)
 * [Connection](#connection)
   * [Convolution2DFunction](#convolution2dfunction)
   * [Deconvolution2DFunction](#deconvolution2dfunction)
@@ -263,6 +267,59 @@ See the documentation for [Add](#add)
 ### [SubFromConstant](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.add.html)
 
 See the documentation for [AddConstant](#addconstant)
+
+
+### [Max](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.max.html)
+
+In case `axis` is `None`, it just calculates maximum value of a tensor,
+which costs simply <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%5C%7Cx%5C%7C-1"/>.
+
+Here, let's consider a 4-dimensional array whose shape is <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28A%2C%20B%2C%20C%2C%20D%29"/>.
+When `axis` is set to `(1, 2)`,
+* First it calculates max over the axis 1, which is <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28B-1%29ACD"/> FLOPs,
+  and this makes a tensor shaped <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28A%2C%20C%2C%20D%29"/>
+* Next, max over the original axis 2 is conducted in <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28C-1%29AD"/> FLOPs,
+  and a tensor <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28A%2C%20D%29"/> is remained.
+Total FLOPs is just a sum of above, and the output is <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28A%2C%20D%29"/>.
+
+Therefore, FLOPs is calculated by the following algorithm.
+
+```
+input: x, axes
+output: f (FLOPs), s (output size)
+s <- x.size
+f <- 0
+foreach i in axes
+    d <- x.shape
+    s <- s / d
+    f <- f + (d-1)s
+```
+
+| Item   | Value |
+|:-------|:------|
+| FLOPs  | See the above explanation |
+| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20%20"/> |
+| mwrite | See the above explanation |
+| params | `axis` |
+
+
+### [Min](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.min.html)
+
+See the documentation for [Max](#max).
+
+
+### [ArgMax](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.argmax.html)
+
+Theoretical cost of Argmax is exactly same as Min/Max, except that
+Argmax can receive only one axis.
+See the documentation for [Max](#max).
+
+
+### [ArgMin](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.argmin.html)
+
+Theoretical cost of Argmin is exactly same as Min/Max, except that
+Argmax can receive only one axis.
+See the documentation for [Max](#max).
 
 
 ## Connection
