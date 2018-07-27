@@ -19,6 +19,7 @@ is written in [README.md](README.md).
   * [Sigmoid](#sigmoid)
   * [Softmax](#softmax)
 * [Array](#array)
+  * [BroadcastTo](#broadcastto)
   * [Concat](#concat)
   * [Reshape](#reshape)
   * [ResizeImages](#resizeimages)
@@ -114,6 +115,19 @@ Finally each elements are devided by the sum (<img src="https://latex.codecogs.c
 
 
 ## Array
+
+### [BroadcastTo](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.broadcast_to.html)
+
+As index calculation is ignored in chainer-computational-cost,
+broadcasting is theoretically 0 FLOPs.
+
+| Item   | Value |
+|:-------|:------|
+| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%200%20"/> |
+| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
+| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20y%20%5C%7C%20"/> |
+| params | `shape`: output shape |
+
 
 ### [Concat](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.concat.html)
 

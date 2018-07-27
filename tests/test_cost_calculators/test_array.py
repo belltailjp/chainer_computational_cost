@@ -4,6 +4,19 @@ import numpy as np
 from chainer_computational_cost.cost_calculators import calculators
 
 
+def test_broadcast_to():
+    x = np.random.randn(1, 3, 1, 1).astype(np.float32)
+    f = F.array.broadcast.BroadcastTo((1, 3, 10, 10))
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+    assert type(flops) is int and type(mread) is int and type(mwrite) is int
+    assert type(params) is dict
+
+    assert flops == 0
+    assert mread == 3
+    assert mwrite == 3 * 10 * 10
+    assert params == {'shape': (1, 3, 10, 10)}
+
+
 def test_concat():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     f = F.array.concat.Concat()

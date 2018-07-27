@@ -1,9 +1,31 @@
+from functools import reduce
+
 from chainer_computational_cost.cost_calculators import register
 
+from chainer.functions.array.broadcast import BroadcastTo
 from chainer.functions.array.concat import Concat
 from chainer.functions.array.reshape import Reshape
 from chainer.functions.array.resize_images import ResizeImages
 from chainer.functions.array.transpose import Transpose
+
+
+@register(BroadcastTo)
+def calc_broadcast(func, in_data, **kwargs):
+    """[BroadcastTo](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.broadcast_to.html)
+
+    As index calculation is ignored in chainer-computational-cost,
+    broadcasting is theoretically 0 FLOPs.
+
+    | Item   | Value |
+    |:-------|:------|
+    | FLOPs  | $$ 0 $$ |
+    | mread  | $$ \| x \| $$ |
+    | mwrite | $$ \| y \| $$ |
+    | params | `shape`: output shape |
+    """
+    x, = in_data
+    out_size = reduce(lambda x, y: x * y, func._shape)
+    return (0, x.size, out_size, {'shape': func._shape})
 
 
 @register(Concat)
