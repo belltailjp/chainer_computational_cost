@@ -40,6 +40,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         'params': 'Function parameters'
     }
     _custom_cost_calculators = dict()
+    max_digits = 10
 
     def __init__(self, fma_1flop=True):
         self._fma_1flop = fma_1flop
@@ -208,7 +209,7 @@ class ComputationalCostHook(chainer.FunctionHook):
 
     def show_summary_report(self, ost=sys.stdout, mode='csv', unit='G',
                             columns=['type', 'n_layers', 'flops', 'mread',
-                                     'mwrite', 'mrw']):
+                                     'mwrite', 'mrw'], n_digits=3):
         """Show computational cost aggregated for each layer type.
 
         Summarizes based on chainer function. Every call of same function
@@ -224,14 +225,24 @@ class ComputationalCostHook(chainer.FunctionHook):
                 and memory transfer (bytes). None, `K`, `M`, `G` (default) and
                 `T` are supported.
             columns: which columns to include in summary.
+            n_digits: Specify how many digits after the deciaml point to show.
+                Default is 3. Minimum value is 0 where all the values are
+                rounded to integer, and maximum is 10. When `None` is specified
+                it does not round, so as much digits as possible will be shown,
+                that is equivalent to maximum value 10.
+                Be noted that the value specified for `n_digits` does not
+                affect to the precision of the summary row in the bottom of the
+                table. This is because summary is calculated *before* rounding.
         """
         # bring 'total' to the last
         report = copy.deepcopy(self.summary_report)
         report['total'] = report.pop('total')
-        self._show_report_body(report, True, ost, mode, unit, columns)
+        self._show_report_body(report, True, ost, mode,
+                               unit, columns, n_digits)
 
     def show_report(self, ost=sys.stdout, mode='csv', unit='G',
-                    columns=['name', 'flops', 'mread', 'mwrite', 'mrw']):
+                    columns=['name', 'flops', 'mread', 'mwrite', 'mrw'],
+                    n_digits=3):
         """Show computational cost aggregated for each layer.
 
         Every single call of a function will appear as a row.
@@ -245,16 +256,38 @@ class ComputationalCostHook(chainer.FunctionHook):
             unit: Supplementary units used for both computational cost (FLOPs)
                 and memory transfer (bytes). None, `K`, `M`, `G` (default) and
                 `T` are supported.
-            columns: which columns to include in summary.
+            columns: Which columns to include in summary.
+            n_digits: Specify how many digits after the deciaml point to show.
+                Default is 3. Minimum value is 0 where all the values are
+                rounded to integer, and maximum is 10. When `None` is specified
+                it does not round, so as much digits as possible will be shown,
+                that is equivalent to maximum value 10.
+                Be noted that the value specified for `n_digits` does not
+                affect to the precision of the summary row in the bottom of the
+                table. This is because summary is calculated *before* rounding.
         """
         # add 'total' to the last
         total = {'total': self.summary_report['total']}
         report = itertools.chain(self.layer_report.items(), total.items())
         report = OrderedDict(report)
         report = copy.deepcopy(report)
-        self._show_report_body(report, False, ost, mode, unit, columns)
+        self._show_report_body(report, False, ost, mode,
+                               unit, columns, n_digits)
 
-    def _show_report_body(self, report, summary, ost, mode, unit, cols):
+    def _show_report_body(self, report, summary, ost, mode, unit, cols,
+                          n_digits):
+        if n_digits is None or self.max_digits < n_digits:
+            n_digits = self.max_digits
+        if not isinstance(n_digits, int) or n_digits < 0:
+            raise ValueError("n_digits must be either None or an integer "
+                             "larger or equal to 0, but {} ({}) is specified"
+                             .format(n_digits, type(n_digits)))
+
+        if n_digits == 0:
+            rounder = lambda t: str(int(round(t, 0)))
+        else:
+            rounder = lambda t: str(round(t, n_digits))
+
         # check cols
         rep = list(report.values())[0]
         assert all([c in rep for c in cols]), \
@@ -280,9 +313,11 @@ class ComputationalCostHook(chainer.FunctionHook):
         table_report = [header]
         for layer, rep in report.items():
             if unit != '':
-                rep['flops'] = float(rep['flops']) / coeff_flops
+                flops = rounder(float(rep['flops']) / coeff_flops)
+                rep['flops'] = flops
                 for c in ('mread', 'mwrite', 'mrw'):
-                    rep[c] = float(rep[c]) / coeff_bytes
+                    rep[c] = rounder(float(rep[c]) / coeff_bytes)
+
             if 'params' in rep:
                 rep['params'] = self._prettify_dict(rep['params'])
             for c in cols:
@@ -318,6 +353,6 @@ class ComputationalCostHook(chainer.FunctionHook):
     def _show_table(self, table_report, ost):
         import texttable
         table = texttable.Texttable(max_width=0)
-        table.set_precision(6)
+        table.set_cols_dtype(['t'] * len(table_report[0]))  # everything text
         table.add_rows(table_report)
         ost.write(table.draw() + '\n')

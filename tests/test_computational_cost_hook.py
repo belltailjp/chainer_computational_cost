@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import copy
+import io
 
 import chainer
 import chainer.functions as F
@@ -162,3 +163,80 @@ def test_report_ignored_layer():
             assert len(cost.ignored_layers) == 1
             assert 'DummyFunc' in list(cost.ignored_layers.keys())[0]
             assert 'DummyFunc' == list(cost.ignored_layers.values())[0]['type']
+
+
+def test_show_report_unit_and_digits():
+    conv = L.Convolution2D(32, 64, ksize=3, pad=1)
+    x = np.random.randn(8, 32, 128, 128).astype(np.float32)
+    with chainer_computational_cost.ComputationalCostHook() as ccost:
+        conv(x)
+
+    # Just check if assumed value are calculated
+    assert len(ccost.summary_report) == 2   # Conv and Total
+    assert ccost.summary_report['total']['flops'] == 2415919104
+    assert ccost.summary_report['total']['mread'] == 16851200
+    assert ccost.summary_report['total']['mwrite'] == 33554432
+    assert ccost.summary_report['total']['mrw'] == 50405632
+
+    def _report(report_func, **kwargs):
+        sio = io.StringIO()
+        report_func(sio, **kwargs)
+        s = sio.getvalue()
+
+        # recognize table type and break down to a list of lists
+        if ':---' in s:     # it's a markdown table
+            return [[v for v in l.split('|') if len(v) != 0]
+                    for l in s.splitlines()]
+        elif ',' in s:      # csv
+            return [l.split(',') for l in s.splitlines()]
+        else:               # texttable
+            return [[v.strip() for v in l.split('|') if len(v) != 0]
+                    for l in s.splitlines()
+                    if '---' not in l and '===' not in l]
+
+    def show_report(**kwargs):
+        return _report(ccost.show_report, **kwargs)
+
+    def show_summary_report(**kwargs):
+        return _report(ccost.show_summary_report, **kwargs)
+
+    def assert_table(rep, expected):
+        for col, val in expected.items():
+            assert rep[col] == val
+
+    col_flops, col_mr, col_mw, col_mrw = (1, 2, 3, 4)
+
+    # Case unit=None: raw values are shown
+    expected = {col_flops: '2415919104', col_mr: '16851200',
+                col_mw: '33554432', col_mrw: '50405632'}
+    assert_table(show_report(unit=None)[-1], expected)  # default CSV
+    assert_table(show_report(unit=None, mode='md')[-1], expected)
+    assert_table(show_report(unit=None, mode='table')[-1], expected)
+
+    assert_table(show_report(unit=None)[-2], expected)
+
+    # Case unit=G: FLOPs/=1000^3, mem/=1024^3, 3 digits after the decimal point
+    expected = {col_flops: '2.416', col_mr: '0.016',
+                col_mw: '0.031', col_mrw: '0.047'}
+    assert_table(show_report(unit='G')[-1], expected)
+    assert_table(show_report(unit='G', mode='md')[-1], expected)
+    assert_table(show_report(unit='G', mode='table')[-1], expected)
+
+    # Case unit=G, n_digits=6: more digits will be shown
+    expected = {col_flops: '2.415919', col_mr: '0.015694',
+                col_mw: '0.03125', col_mrw: '0.046944'}
+    assert_table(show_report(unit='G', n_digits=6)[-1], expected)
+    assert_table(show_report(unit='G', n_digits=6, mode='md')[-1], expected)
+    assert_table(show_report(unit='G', n_digits=6, mode='table')[-1], expected)
+
+    # Case unit=M, n_digits=0: Values are rounded to integer
+    expected = {col_flops: '2416', col_mr: '16',
+                col_mw: '32', col_mrw: '48'}
+    assert_table(show_report(unit='M', n_digits=0)[-1], expected)
+    assert_table(show_report(unit='M', n_digits=0, mode='md')[-1], expected)
+    assert_table(show_report(unit='M', n_digits=0, mode='table')[-1], expected)
+
+    # Case only some columns are specified
+    rep = show_report(unit='G', columns=['name', 'mrw'])[-1]
+    assert len(rep) == 2
+    assert rep[1] == '0.047'    # only the specified column is reported
