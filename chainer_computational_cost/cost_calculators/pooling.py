@@ -23,19 +23,20 @@ def calc_average_pooling2d(func, in_data, **kwargs):
     """
     x, = in_data
 
+    kh, kw = int(func.kh), int(func.kw)
+    sy, sx = int(func.sy), int(func.sx)
+    ph, pw = int(func.ph), int(func.pw)
     batch_size, in_c, in_h, in_w = x.shape
-    out_h = get_conv_outsize(in_h, func.kh, func.sy, func.ph,
-                             cover_all=func.cover_all)
-    out_w = get_conv_outsize(in_w, func.kw, func.sx, func.pw,
-                             cover_all=func.cover_all)
+    out_h = get_conv_outsize(in_h, kh, sy, ph, cover_all=func.cover_all)
+    out_w = get_conv_outsize(in_w, kw, sx, pw, cover_all=func.cover_all)
 
-    out_size = (batch_size * in_c * out_h * out_w)
-    flops = out_size * func.kw * func.kh
+    out_size = batch_size * in_c * out_h * out_w
+    flops = out_size * kw * kh
 
     params = {
-        'k': func.kw if func.kw == func.kh else (func.kh, func.kw),
-        's': func.sx if func.sx == func.sy else (func.sy, func.sx),
-        'p': func.pw if func.pw == func.ph else (func.ph, func.pw)
+        'k': kw if kw == kh else (kh, kw),
+        's': sx if sx == sy else (sy, sx),
+        'p': pw if pw == ph else (ph, pw)
     }
     return (flops, x.size, out_size, params)
 
@@ -57,18 +58,19 @@ def calc_max_pooling2d(func, in_data, **kwargs):
     """
     x, = in_data
 
+    kh, kw = int(func.kh), int(func.kw)
+    sy, sx = int(func.sy), int(func.sx)
+    ph, pw = int(func.ph), int(func.pw)
     batch_size, in_c, in_h, in_w = x.shape
-    out_h = get_conv_outsize(in_h, func.kh, func.sy, func.ph,
-                             cover_all=func.cover_all)
-    out_w = get_conv_outsize(in_w, func.kw, func.sx, func.pw,
-                             cover_all=func.cover_all)
+    out_h = get_conv_outsize(in_h, kh, sy, ph, cover_all=func.cover_all)
+    out_w = get_conv_outsize(in_w, kw, sx, pw, cover_all=func.cover_all)
 
-    out_size = (batch_size * in_c * out_h * out_w)
-    flops = out_size * (func.kw * func.kh - 1)
+    out_size = batch_size * in_c * out_h * out_w
+    flops = out_size * int(kw * kh - 1)
 
     params = {
-        'k': func.kw if func.kw == func.kh else (func.kh, func.kw),
-        's': func.sx if func.sx == func.sy else (func.sy, func.sx),
-        'p': func.pw if func.pw == func.ph else (func.ph, func.pw)
+        'k': kw if kw == kh else (kh, kw),
+        's': sx if sx == sy else (sy, sx),
+        'p': pw if pw == ph else (ph, pw)
     }
     return (flops, x.size, out_size, params)

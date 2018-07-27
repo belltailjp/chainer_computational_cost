@@ -67,11 +67,12 @@ def calc_conv2d(func, in_data, **kwargs):
     batch_size, in_c, in_h, in_w = x.shape
     out_c, _, kh, kw = W.shape
     g = func.groups
+    sy, sx = int(func.sy), int(func.sx)
+    ph, pw = int(func.ph), int(func.pw)
+    dy, dx = int(func.dy), int(func.dx)
 
-    out_h = get_conv_outsize(in_h, kh, func.sy, func.ph,
-                             cover_all=func.cover_all, d=func.dy)
-    out_w = get_conv_outsize(in_w, kw, func.sx, func.pw,
-                             cover_all=func.cover_all, d=func.dx)
+    out_h = get_conv_outsize(in_h, kh, sy, ph, cover_all=func.cover_all, d=dy)
+    out_w = get_conv_outsize(in_w, kw, sx, pw, cover_all=func.cover_all, d=dx)
 
     if kwargs.get('fma_1flop'):
         flops = in_c * (out_c // g) * kw * kh * out_w * out_h
@@ -89,9 +90,9 @@ def calc_conv2d(func, in_data, **kwargs):
 
     params = {
         'k': (kw if kw == kh else (kh, kw)),
-        's': (func.sx if func.sx == func.sy else (func.sy, func.sx)),
-        'p': (func.pw if func.pw == func.ph else (func.ph, func.pw)),
-        'd': (func.dx if func.dx == func.dy else (func.dy, func.dx)),
+        's': (sx if sx == sy else (sy, sx)),
+        'p': (pw if pw == ph else (ph, pw)),
+        'd': (dx if dx == dy else (dy, dx)),
         'groups': func.groups, 'nobias': b is None
     }
     return (flops * batch_size, mread, mwrite, params)

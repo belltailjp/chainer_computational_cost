@@ -91,4 +91,4 @@ def calc_softmax(func, in_data, **kwargs):
     s = [s for i, s in enumerate(x.shape) if i != func.axis]
     s = reduce(lambda x, y: x * y, s)
     flops = 2 * x.size + s * (c - 1)
-    return (flops, x.size, x.size, {'axis': func.axis})
+    return (flops, x.size, x.size, {'axis': int(func.axis)})
