@@ -4,6 +4,7 @@ from chainer_computational_cost.cost_calculators import register
 
 from chainer.functions.array.broadcast import BroadcastTo
 from chainer.functions.array.concat import Concat
+from chainer.functions.array.get_item import GetItem
 from chainer.functions.array.reshape import Reshape
 from chainer.functions.array.resize_images import ResizeImages
 from chainer.functions.array.transpose import Transpose
@@ -135,3 +136,28 @@ def calc_transpose(func, in_data, **kwargs):
     """
     x, = in_data
     return (0, x.size, x.size, {'axes': func.axes})
+
+
+@register(GetItem)
+def calc_get_item(func, in_data, **kwargs):
+    """[GetItem](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.get_item.html)
+
+    Extract part of an array. This operation is zero FLOPs.
+    Most of tensor libraries have view feature, which doesn't actually create
+    a new array unless necessary, but this is not considered in
+    chainer-computational-cost.
+    Memory read runs only for the necessary elements, so both memory
+    read and write are same as the size of output tensor.
+
+    | Item   | Value |
+    |:-------|:------|
+    | FLOPs  | $$ 0 $$ |
+    | mread  | $$ \| y \| $$ |
+    | mwrite | $$ \| y \| $$ |
+    | params | `slices`: list of slices, a slice is an int or a tuple with 3 elements |
+    """     # NOQA
+    x, = in_data
+    y = x[func.slices]
+    slices = [(s if type(s) is int else (s.start, s.stop, s.step))
+              for s in func.slices]
+    return (0, y.size, y.size, {'slices': slices})

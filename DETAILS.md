@@ -24,6 +24,7 @@ is written in [README.md](README.md).
   * [Reshape](#reshape)
   * [ResizeImages](#resizeimages)
   * [Transpose](#transpose)
+  * [GetItem](#getitem)
 * [Connection](#connection)
   * [Convolution2DFunction](#convolution2dfunction)
   * [Deconvolution2DFunction](#deconvolution2dfunction)
@@ -213,6 +214,23 @@ Transpose operation is just copying memory with no FLOPs.
 | mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
 | mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
 | params | `axes`: transpose axes |
+
+
+### [GetItem](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.get_item.html)
+
+Extract part of an array. This operation is zero FLOPs.
+Most of tensor libraries have view feature, which doesn't actually create
+a new array unless necessary, but this is not considered in
+chainer-computational-cost.
+Memory read runs only for the necessary elements, so both memory
+read and write are same as the size of output tensor.
+
+| Item   | Value |
+|:-------|:------|
+| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%200%20"/> |
+| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20y%20%5C%7C%20"/> |
+| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20y%20%5C%7C%20"/> |
+| params | `slices`: list of slices, a slice is an int or a tuple with 3 elements |
 
 
 ## Connection
