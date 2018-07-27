@@ -240,3 +240,13 @@ def test_show_report_unit_and_digits():
     rep = show_report(unit='G', columns=['name', 'mrw'])[-1]
     assert len(rep) == 2
     assert rep[1] == '0.047'    # only the specified column is reported
+
+    # Case only some columns are specified (order is changed)
+    rep = show_report(unit='G', columns=['name', 'mrw', 'flops'])[-1]
+    assert len(rep) == 3
+    assert rep[1] == '0.047'
+    assert rep[2] == '2.416'    # flops comes after
+
+    # Case when invalid column is specified
+    with pytest.raises(ValueError):
+        show_report(unit='G', columns=['name', 'wooooohoooooooo'])

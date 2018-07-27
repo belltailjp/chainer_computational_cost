@@ -290,8 +290,10 @@ class ComputationalCostHook(chainer.FunctionHook):
 
         # check cols
         rep = list(report.values())[0]
-        assert all([c in rep for c in cols]), \
-            "Unknown column(s) specified: {}".format(cols)
+        if any([c not in rep for c in cols]):
+            raise ValueError("Unknown column(s) specified: {}\n"
+                             "Available options: {}"
+                             .format(cols, ", ".join(rep.keys())))
 
         if unit not in self._flops_coeff_table:
             raise ValueError("Please specify either None, 'K', 'M', 'G' or 'T'"
