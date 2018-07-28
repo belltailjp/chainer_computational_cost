@@ -1,5 +1,6 @@
 import chainer.functions.normalization as N
 import numpy as np
+import pytest
 
 from helpers import calculate_cost
 
@@ -39,6 +40,40 @@ def test_fixed_bn_fma():
     assert mread == 3 * 10 * 10 + (3 + 3)   # input data, scale and shift param
     assert mwrite == 3 * 10 * 10
     assert params == {'eps': f.eps}
+
+
+def test_normalize_no_fma():
+    c, h, w = 3, 10, 10
+    x = np.random.randn(1, c, h, w).astype(np.float32)
+    f = N.l2_normalization.NormalizeL2(axis=2)
+    flops, mread, mwrite, params = calculate_cost(f, [x], fma_1flop=False)
+    assert flops == (3 * h + 1) * c * w
+    assert mread == x.size
+    assert mwrite == x.size
+    assert params == {'axis': 2}
+
+
+def test_normalize_fma():
+    c, h, w = 3, 10, 10
+    x = np.random.randn(1, c, h, w).astype(np.float32)
+    f = N.l2_normalization.NormalizeL2(axis=2)
+    flops, mread, mwrite, params = calculate_cost(f, [x], fma_1flop=True)
+    assert flops == (2 * h + 2) * c * w
+    assert mread == x.size
+    assert mwrite == x.size
+    assert params == {'axis': 2}
+
+
+def test_normalize_2axes():
+    c, h, w = 3, 10, 10
+    x = np.random.randn(1, c, h, w).astype(np.float32)
+    f = N.l2_normalization.NormalizeL2(axis=(2, 3))
+    with pytest.warns(UserWarning):
+        flops, mread, mwrite, params = calculate_cost(f, [x], fma_1flop=True)
+    assert flops == (2 * h + 2) * c * w
+    assert mread == x.size
+    assert mwrite == x.size
+    assert params == {'axis': 2}
 
 
 def test_lrn():

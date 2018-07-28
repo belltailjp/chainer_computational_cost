@@ -46,6 +46,7 @@ is written in [README.md](README.md).
   * [ArgMin](#argmin)
 * [Normalization](#normalization)
   * [FixedBatchNormalization](#fixedbatchnormalization)
+  * [NormalizeL2](#normalizel2)
   * [LocalResponseNormalization](#localresponsenormalization)
 * [Pooling](#pooling)
   * [AveragePooling2D](#averagepooling2d)
@@ -515,6 +516,38 @@ Both are 1-dimensional array with <img src="https://latex.codecogs.com/png.latex
 | mread         | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7Cx%5C%7C%20%2B%202%20c_%7B%5Cmathrm%7Bin%7D%7D%20"/> |
 | mwrite        | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
 | params        | `eps`: epsilon for BN |
+
+
+### [NormalizeL2](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.normalize.html)
+
+Let us assume that `axis` is channel axis, then each spatial position has
+a <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c"/>-dimensional vector.
+Cacululation L2-norm of this vector is, with no FMA mode,
+first it applies elementwise square in <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c"/> FLOPs and summation
+in <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c-1"/> FLOPs finally sqrt in <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%201"/> FLOP, so in total <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%202c"/> FLOPs.
+With FMA mode, <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c"/> FLOPs for square and sum, then <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%201"/> FLOP for summing up,
+in total <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c%2B1"/> FLOPs.
+
+Then <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%5Ceps"/> is added to the L2-norm and elementwise division is applied
+in total <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20c%2B1"/> FLOPs.
+
+Hense, total cost for L2-normalizing an array is <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%282c%2Bc%2B1%29wh"/> FLOPs with
+no FMA mode, or <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28c%2B1%2Bc%2B1%29wh"/> FLOPs.
+
+Chainer's NormalizeL2 implementation supports `axis` to be up to 2
+elements, but it's undocumented, so chainer-computational-cost only assumes
+that axis is only one dimension.
+
+In the below table, 3-dimensional array with shape <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28c%2Ch%2Cw%29"/> is assumed
+and the axis is channel dimension, but any other shape/axis is the same.
+
+| Item          | Value |
+|:--------------|:------|
+| FLOPs(FMA)    | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20%282c%2B2%29wh%20%5C%7C%20"/> when shape of <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20x"/> is <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28c%2Ch%2Cw%29"/> and `axis` is 0 |
+| FLOPs(no-FMA) | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20%283c%2B1%29wh%20%5C%7C%20"/> when shape of <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20x"/> is <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%28c%2Ch%2Cw%29"/> and `axis` is 0 |
+| mread         | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
+| mwrite        | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
+| params        | `axis` |
 
 
 ### [LocalResponseNormalization](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.local_response_normalization.html)
