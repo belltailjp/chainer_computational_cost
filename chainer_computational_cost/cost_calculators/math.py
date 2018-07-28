@@ -13,6 +13,7 @@ from chainer.functions.math.minmax import ArgMax
 from chainer.functions.math.minmax import ArgMin
 from chainer.functions.math.minmax import Max
 from chainer.functions.math.minmax import Min
+from chainer.functions.math.sum import Sum
 
 
 def _calc(func, xs, **kwargs):
@@ -210,6 +211,18 @@ def calc_argmin(func, in_data, **kwargs):
 
     Theoretical cost of Argmin is exactly same as Min/Max, except that
     Argmax can receive only one axis.
+    See the documentation for [Max](#max).
+    """
+    x, = in_data
+    return _calc_minmax(func, x, **kwargs)
+
+
+@register(Sum)
+def calc_sum(func, in_data, **kwargs):
+    """[Sum](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.sum.html)
+
+    Sum of an array among the specified axis(axes) also costs equivalently to
+    max operation, since it just replaces $\max(a, b)$ by $a+b$.
     See the documentation for [Max](#max).
     """
     x, = in_data

@@ -121,3 +121,37 @@ def test_argmin():
     assert mread == 3 * 10 * 10
     assert mwrite == 10 * 10
     assert params == {'axis': 1}
+
+
+def test_sum():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.math.sum.Sum(axis=1)
+    flops, mread, mwrite, params = calculate_cost(f, [x])
+
+    # exactly same as min/max
+    assert flops == (3 - 1) * 10 * 10
+    assert mread == 3 * 10 * 10
+    assert mwrite == 10 * 10
+    assert params == {'axis': (1,)}
+
+
+def test_sum_axes():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.math.sum.Sum(axis=(1, 2))
+    flops, mread, mwrite, params = calculate_cost(f, [x])
+    assert flops == (3 - 1) * 10 * 10 + (10 - 1) * 10
+    assert mread == 3 * 10 * 10
+    assert mwrite == 10
+    assert params == {'axis': (1, 2)}
+
+
+def test_sum_noaxis():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = F.math.sum.Sum()
+    flops, mread, mwrite, params = calculate_cost(f, [x])
+
+    # exactly same as min/max
+    assert flops == 3 * 10 * 10 - 1
+    assert mread == 3 * 10 * 10
+    assert mwrite == 1
+    assert params == {'axis': None}

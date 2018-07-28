@@ -44,6 +44,7 @@ is written in [README.md](README.md).
   * [Min](#min)
   * [ArgMax](#argmax)
   * [ArgMin](#argmin)
+  * [Sum](#sum)
 * [Normalization](#normalization)
   * [FixedBatchNormalization](#fixedbatchnormalization)
   * [NormalizeL2](#normalizel2)
@@ -488,6 +489,13 @@ See the documentation for [Max](#max).
 
 Theoretical cost of Argmin is exactly same as Min/Max, except that
 Argmax can receive only one axis.
+See the documentation for [Max](#max).
+
+
+### [Sum](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.sum.html)
+
+Sum of an array among the specified axis(axes) also costs equivalently to
+max operation, since it just replaces <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20%5Cmax%28a%2C%20b%29"/> by <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20a%2Bb"/>.
 See the documentation for [Max](#max).
 
 
