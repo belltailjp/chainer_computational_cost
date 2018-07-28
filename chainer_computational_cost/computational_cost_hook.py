@@ -246,8 +246,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         # bring 'total' to the last
         report = copy.deepcopy(self.summary_report)
         report['total'] = report.pop('total')
-        self._show_report_body(report, True, ost, mode,
-                               unit, columns, n_digits)
+        self._show_report_body(report, ost, mode, unit, columns, n_digits)
 
     def show_report(self, ost=sys.stdout, mode='csv', unit='G',
                     columns=['name', 'flops', 'mread', 'mwrite', 'mrw'],
@@ -284,10 +283,9 @@ class ComputationalCostHook(chainer.FunctionHook):
         report = itertools.chain(self.layer_report.items(), total.items())
         report = OrderedDict(report)
         report = copy.deepcopy(report)
-        self._show_report_body(report, False, ost, mode,
-                               unit, columns, n_digits)
+        self._show_report_body(report, ost, mode, unit, columns, n_digits)
 
-    def _show_report_body(self, report, summary, ost, mode, unit, cols,
+    def _show_report_body(self, report, ost, mode, unit, cols,
                           n_digits):
         if n_digits is None or self.max_digits < n_digits:
             n_digits = self.max_digits
