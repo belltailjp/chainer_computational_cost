@@ -2,6 +2,7 @@ from functools import reduce
 
 from chainer_computational_cost.cost_calculators import register
 
+from chainer.functions.activation.leaky_relu import LeakyReLU
 from chainer.functions.activation.prelu import PReLUFunction
 from chainer.functions.activation.relu import ReLU
 from chainer.functions.activation.sigmoid import Sigmoid
@@ -45,6 +46,27 @@ def calc_relu(func, in_data, **kwargs):
     """
     x, = in_data
     return (x.size, x.size, x.size, {})
+
+
+@register(LeakyReLU)
+def calc_leaky_relu(func, in_data, **kwargs):
+    """[LeakyReLU](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.leaky_relu.html)
+
+    Leaky ReLU applies an elementwise multiplication with slope gradient
+    followed by a max operation. Strictly speaking,
+    the number of multiplication to be conducted is depend on the input data,
+    but for simplicity, chainer-computational-cost treats Leaky ReLU as
+    $y=\max(x, ax)$.
+
+    | Item   | Value |
+    |:-------|:------|
+    | FLOPs  | $$2 \| x \|$$ |
+    | mread  | $$\| x \|$$ |
+    | mwrite | $$\| x \|$$ |
+    | params | N/A |
+    """
+    x, = in_data
+    return (2 * x.size, x.size, x.size, {})
 
 
 @register(Sigmoid)

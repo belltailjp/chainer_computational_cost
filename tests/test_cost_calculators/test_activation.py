@@ -25,6 +25,16 @@ def test_activation_relu():
     assert params == dict()
 
 
+def test_activation_leaky_relu():
+    x = np.random.randn(1, 3, 100, 100).astype(np.float32)
+    f = F.LeakyReLU()
+    flops, mread, mwrite, params = calculate_cost(f, [x])
+    assert flops == 2 * x.size
+    assert mread == x.size
+    assert mwrite == x.size
+    assert params == dict()
+
+
 def test_activation_sigmoid():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
     f = F.Sigmoid()

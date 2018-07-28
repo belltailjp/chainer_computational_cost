@@ -16,6 +16,7 @@ is written in [README.md](README.md).
 * [Activation](#activation)
   * [PReLUFunction](#prelufunction)
   * [ReLU](#relu)
+  * [LeakyReLU](#leakyrelu)
   * [Sigmoid](#sigmoid)
   * [Softmax](#softmax)
 * [Array](#array)
@@ -77,6 +78,22 @@ chainer-computational-cost considers it as one floating point operation.
 | Item   | Value |
 |:-------|:------|
 | FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C"/> |
+| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C"/> |
+| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C"/> |
+| params | N/A |
+
+
+### [LeakyReLU](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.leaky_relu.html)
+
+Leaky ReLU applies an elementwise multiplication with slope gradient
+followed by a max operation. Strictly speaking,
+the number of multiplication to be conducted is depend on the input data,
+but for simplicity, chainer-computational-cost treats Leaky ReLU as
+<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnormal%20y%3D%5Cmax%28x%2C%20ax%29"/>.
+
+| Item   | Value |
+|:-------|:------|
+| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%202%20%5C%7C%20x%20%5C%7C"/> |
 | mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C"/> |
 | mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C"/> |
 | params | N/A |
