@@ -51,6 +51,7 @@ is written in [README.md](README.md).
 * [Pooling](#pooling)
   * [AveragePooling2D](#averagepooling2d)
   * [MaxPooling2D](#maxpooling2d)
+  * [Upsampling2D](#upsampling2d)
 
 
 ## Activation
@@ -603,4 +604,21 @@ input (<img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B100%7D%20%5Cnorma
 | mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20x%20%5C%7C"/> |
 | mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%5C%7C%20y%20%5C%7C"/> |
 | params | AvgPooling parameter `k`, `s` and `p` |
+
+
+### [Upsampling2D](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.upsampling_2d.html)
+
+Upsampling2D only reads the data from memory and writs to the certain
+position in the output using indices. Other pixels are filled by 0.
+Indices array has always the same shape as the input.
+Although its data type is not float but int, since their data size is
+usually the same (`float32` and `int32`), chainer-computational-cost
+ignores this difference and considers indices to be same as input.
+
+| Item   | Value |
+|:-------|:------|
+| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%200%20"/> |
+| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%202%20%5C%7C%20x%20%5C%7C%20"/> |
+| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20y%20%5C%7C%20"/> |
+| params | Upsampling parameter `k`, `s`, `p`, `outsize` and `cover_all` |
 
