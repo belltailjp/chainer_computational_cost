@@ -158,6 +158,6 @@ def calc_get_item(func, in_data, **kwargs):
     """     # NOQA
     x, = in_data
     y = x[func.slices]
-    slices = [(s if type(s) is int else (s.start, s.stop, s.step))
+    slices = [(s.start, s.stop, s.step) if type(s) is slice else s
               for s in func.slices]
     return (0, y.size, y.size, {'slices': slices})

@@ -124,3 +124,20 @@ def test_get_item_slice():
     assert params == {
         'slices': [0, 0, (None, None, None), (None, None, None)]
     }
+
+
+def test_get_item_slice2():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    # x[0, 0, :]
+    slices = (0, 0, slice(None, None, None))
+    f = F.array.get_item.GetItem(slices)
+    flops, mread, mwrite, params = calculators[type(f)](f, [x])
+    assert type(flops) is int and type(mread) is int and type(mwrite) is int
+    assert type(params) is dict
+
+    assert flops == 0
+    assert mread == 10 * 10
+    assert mwrite == 10 * 10
+    assert params == {
+        'slices': [0, 0, (None, None, None)]
+    }
