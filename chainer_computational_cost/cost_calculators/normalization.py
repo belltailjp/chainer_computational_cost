@@ -1,7 +1,11 @@
+import warnings
+
 from chainer_computational_cost.cost_calculators import register
 
 from chainer.functions.normalization.batch_normalization \
     import FixedBatchNormalization
+from chainer.functions.normalization.l2_normalization \
+    import NormalizeL2
 from chainer.functions.normalization.local_response_normalization \
     import LocalResponseNormalization
 
@@ -43,6 +47,60 @@ def calc_fixed_bn(func, in_data, **kwargs):
     mread = n_elements + len(mean) + len(var)
     mwrite = n_elements
     return (flops, mread, mwrite, {'eps': func.eps})
+
+
+@register(NormalizeL2)
+def calc_normalize(func, in_data, **kwargs):
+    """[NormalizeL2](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.normalize.html)
+
+    Let us assume that `axis` is channel axis, then each spatial position has
+    a $c$-dimensional vector.
+    Cacululation L2-norm of this vector is, with no FMA mode,
+    first it applies elementwise square in $c$ FLOPs and summation
+    in $c-1$ FLOPs finally sqrt in $1$ FLOP, so in total $2c$ FLOPs.
+    With FMA mode, $c$ FLOPs for square and sum, then $1$ FLOP for summing up,
+    in total $c+1$ FLOPs.
+
+    Then $\eps$ is added to the L2-norm and elementwise division is applied
+    in total $c+1$ FLOPs.
+
+    Hense, total cost for L2-normalizing an array is $(2c+c+1)wh$ FLOPs with
+    no FMA mode, or $(c+1+c+1)wh$ FLOPs.
+
+    Chainer's NormalizeL2 implementation supports `axis` to be up to 2
+    elements, but it's undocumented, so chainer-computational-cost only assumes
+    that axis is only one dimension.
+
+    In the below table, 3-dimensional array with shape $(c,h,w)$ is assumed
+    and the axis is channel dimension, but any other shape/axis is the same.
+
+    | Item          | Value |
+    |:--------------|:------|
+    | FLOPs(FMA)    | $$ \| (2c+2)wh \| $$ when shape of $x$ is $(c,h,w)$ and `axis` is 0 |
+    | FLOPs(no-FMA) | $$ \| (3c+1)wh \| $$ when shape of $x$ is $(c,h,w)$ and `axis` is 0 |
+    | mread         | $$ \| x \| $$ |
+    | mwrite        | $$ \| x \| $$ |
+    | params        | `axis` |
+    """      # NOQA
+    x, = in_data
+    axis = func.axis
+    if type(axis) is tuple:
+        if 1 < len(axis):  # it can be a tuple
+            warnings.warn("chainer-computational-cost only supports axis "
+                          "to be 1 element.")
+        axis = axis[0]
+    d_axis = x.shape[axis]
+    d_rest = x.size // d_axis
+
+    if kwargs.get('fma_1flop'):
+        flops = (2 * d_axis + 2) * d_rest
+    else:
+        flops = (3 * d_axis + 1) * d_rest
+
+    mread = x.size
+    mwrite = x.size
+    params = {'axis': axis}
+    return (flops, mread, mwrite, params)
 
 
 @register(LocalResponseNormalization)

@@ -1,7 +1,8 @@
 import chainer.functions.normalization as N
 import numpy as np
+import pytest
 
-from chainer_computational_cost.cost_calculators import calculators
+from helpers import calculate_cost
 
 
 def test_fixed_bn():
@@ -11,10 +12,8 @@ def test_fixed_bn():
     mean = np.random.randn(3).astype(np.float32)
     var = np.random.exponential(size=(3,)).astype(np.float32)
     f = N.batch_normalization.FixedBatchNormalization(eps=np.float64(1e-5))
-    ret = calculators[type(f)](f, [x, gamma, beta, mean, var])
+    ret = calculate_cost(f, [x, gamma, beta, mean, var])
     flops, mread, mwrite, params = ret
-    assert type(flops) is int and type(mread) is int and type(mwrite) is int
-    assert type(params) is dict
 
     # in test mode BN, gamma, beta, mean and var will eventually become
     # channel-wise scale and shift.
@@ -32,7 +31,7 @@ def test_fixed_bn_fma():
     mean = np.random.randn(3).astype(np.float32)
     var = np.random.exponential(size=(3,)).astype(np.float32)
     f = N.batch_normalization.FixedBatchNormalization()
-    ret = calculators[type(f)](f, [x, gamma, beta, mean, var], fma_1flop=True)
+    ret = calculate_cost(f, [x, gamma, beta, mean, var], fma_1flop=True)
     flops, mread, mwrite, params = ret
 
     # in test mode BN, gamma, beta, mean and var will eventually become
@@ -43,6 +42,40 @@ def test_fixed_bn_fma():
     assert params == {'eps': f.eps}
 
 
+def test_normalize_no_fma():
+    c, h, w = 3, 10, 10
+    x = np.random.randn(1, c, h, w).astype(np.float32)
+    f = N.l2_normalization.NormalizeL2(axis=2)
+    flops, mread, mwrite, params = calculate_cost(f, [x], fma_1flop=False)
+    assert flops == (3 * h + 1) * c * w
+    assert mread == x.size
+    assert mwrite == x.size
+    assert params == {'axis': 2}
+
+
+def test_normalize_fma():
+    c, h, w = 3, 10, 10
+    x = np.random.randn(1, c, h, w).astype(np.float32)
+    f = N.l2_normalization.NormalizeL2(axis=2)
+    flops, mread, mwrite, params = calculate_cost(f, [x], fma_1flop=True)
+    assert flops == (2 * h + 2) * c * w
+    assert mread == x.size
+    assert mwrite == x.size
+    assert params == {'axis': 2}
+
+
+def test_normalize_2axes():
+    c, h, w = 3, 10, 10
+    x = np.random.randn(1, c, h, w).astype(np.float32)
+    f = N.l2_normalization.NormalizeL2(axis=(2, 3))
+    with pytest.warns(UserWarning):
+        flops, mread, mwrite, params = calculate_cost(f, [x], fma_1flop=True)
+    assert flops == (2 * h + 2) * c * w
+    assert mread == x.size
+    assert mwrite == x.size
+    assert params == {'axis': 2}
+
+
 def test_lrn():
     c, h, w = 8, 10, 10
     x = np.random.randn(1, c, h, w).astype(np.float32)
@@ -50,10 +83,7 @@ def test_lrn():
         n=np.int64(5), k=np.int64(2),
         alpha=np.float64(0.0001), beta=np.float64(0.75)
     )
-    flops, mread, mwrite, params = calculators[type(f)](f, [x])
-    assert type(flops) is int and type(mread) is int and type(mwrite) is int
-    assert type(params) is dict
-
+    flops, mread, mwrite, params = calculate_cost(f, [x])
     assert flops == (6 * c - 1) * h * w
     assert mread == x.size
     assert mwrite == x.size
@@ -71,10 +101,7 @@ def test_lrn_fma():
     c, h, w = 8, 10, 10
     x = np.random.randn(1, c, h, w).astype(np.float32)
     f = N.local_response_normalization.LocalResponseNormalization()
-    flops, mread, mwrite, params = calculators[type(f)](f, [x], fma_1flop=True)
-    assert type(flops) is int and type(mread) is int and type(mwrite) is int
-    assert type(params) is dict
-
+    flops, mread, mwrite, params = calculate_cost(f, [x], fma_1flop=True)
     assert flops == (5 * c - 1) * h * w
     assert mread == x.size
     assert mwrite == x.size
