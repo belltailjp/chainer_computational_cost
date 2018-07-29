@@ -1,7 +1,7 @@
 # chainer-computational-cost
 
 This is a tool to estimate theoretical computational cost
-of a chainer-based neural network.
+of a chainer-based neural network forward pass.
 
 You can analyze
 
@@ -128,10 +128,60 @@ It will show the following table to stdout in markdown table format.
 If you call `show_summary_report` method,
 it will show summary for each type of layer.
 
-Both `show_report` and `show_summary_report` support
-`mode` param to switch print mode.
-Default is `mode='csv'`, but `mode='md'` (markdown table mode) and
-`mode='table'` (text table) are also supported.
+|Layer type|# Layers|GFLOPs|MemRead GiB|MemWrite GiB|MemR+W GiB|
+|:----|:----|:----|:----|:----|:----|
+|Convolution2DFunction|13|15.347|0.089|0.05|0.139|
+|ReLU|15|0.014|0.05|0.05|0.101|
+|MaxPooling2D|5|0.005|0.023|0.006|0.029|
+|Reshape|1|0.0|0.0|0.0|0.0|
+|LinearFunction|3|0.124|0.461|0.0|0.461|
+|Softmax|1|0.0|0.0|0.0|0.0|
+|total|38|15.488|0.623|0.107|0.729|
+
+
+Estimation values can be accessed through instance method of
+`ComputationalCostHook`.
+
+* `layer_report`
+  * Layer-wise computational-cost estimations
+* `summary_report`
+	* Computational costs summarized for each layer types
+* `ignored_layers`
+  * List of layers that are not yet supported by chainer-computational-cost
+* `total_report`
+	* Total computational costs of the entire NN
+    (layers caught during the lifetime of the hook object)
+
+
+## Usage
+
+As for basic usage, please refer to the avobe quickstart.
+
+
+### FMA mode
+
+When `fma_1flop` is set to `True`, chainer_computational_cost considers
+FMA (fused multiply and add, `ax + b`) as one operation.
+Otherwise, it counts as 2 operations.
+
+This affects to convolution and linear layers' estimation.
+
+
+### Reporting
+
+Estimated computational cost table is reported by calling `show_report`
+and `show_summary_report` method.
+
+These have several options as explained below.
+
+
+#### Report mode
+
+Currently it supports the following modes.
+
+* CSV mode (`mode='csv'`) - default
+* Markdown table (`mode='md'`)
+* Prettified table (`mode='table'`)
 
 ```
 >>> cost.show_summary_report(unit='G', mode='table')
@@ -156,7 +206,94 @@ Default is `mode='csv'`, but `mode='md'` (markdown table mode) and
 ```
 
 
-In addition, you can specify which column to show as a table.
+#### Report destination
+
+Report is by default written to stdout.
+You can specify stream (e.g. file object) to `dst` argument of
+`show_report` and `show_summary_report`.
+
+```python
+cost.show_report(ost=sys.stderr, unit='G', mode='md')
+
+cost.show_summary_report(ost=sys.stderr, unit='G', mode='md')
+```
+
+
+#### Prefixed-units
+
+The following unit prefixes are supported by `unit` argument of
+`show_report` and `show_summary_report`.
+
+* `None`: if you want to use raw values
+* `K`: 10^3 (for FLOPs) or 1024^1 (for memory report)
+* `M`: 10^6 or 1024^2
+* `G`: 10^9 or 1024^3
+* `T`: 10^12 or 1024^4
+
+For memory report, the unit will be shown as like `KiB` or `MiB` instead of
+`KB`.
+
+
+#### Number of digits
+
+You can specify how many digits after the decimal point to show to
+`n_digits` argument of `show_report` and `show_summary_report`.
+
+By default it is set to 3.
+Possible value is between 0 (round to integer) to 10.
+If `None` is specified it is treated as 10.
+
+Be noted that you do not need to worry about numerical error in summary report
+due to the rounding, because summary values are calculated before rounding.
+
+```
+>>> cost.show_summary_report(unit='G', mode='table', n_digits=8)
++-----------------------+----------+-------------+------------+------------+------------+
+|      Layer type       | # Layers |   GFLOPs    |  MemRead   |  MemWrite  |   MemR+W   |
+|                       |          |             |    GiB     |    GiB     |    GiB     |
++=======================+==========+=============+============+============+============+
+| Convolution2DFunction | 13       | 15.34663066 | 0.08864903 | 0.05046844 | 0.13911748 |
++-----------------------+----------+-------------+------------+------------+------------+
+| ReLU                  | 15       | 0.01355571  | 0.05049896 | 0.05049896 | 0.10099792 |
++-----------------------+----------+-------------+------------+------------+------------+
+| ...									  | ...      | ...         | ...        | ...        | ...        |
+```
+
+
+#### Custom columns
+
+You can specify which column to show as a table to
+`columns` argument of `show_report` and `show_summary_report`.
+
+There are two ways to customize columns.
+
+The first way is to make use of predefined columns set.
+There are some column definitions in `SummaryColumns` for
+`show_summary_report`, and `ReportColumns` for `show_report`, respectively.
+
+```
+>>> cost.show_summary_report(unit='G', mode='table', columns=SummaryColumns.ALL)
++-----------------------+----------+--------+---------+----------+--------+---------+---------+----------+---------+
+|      Layer type       | # Layers | GFLOPs | MemRead | MemWrite | MemR+W |  FLOPs  | MemRead | MemWrite | MemR+W  |
+|                       |          |        |   GiB   |   GiB    |  GiB   |   (%)   |   (%)   |   (%)    |   (%)   |
++=======================+==========+========+=========+==========+========+=========+=========+==========+=========+
+| Convolution2DFunction | 13       | 15.347 | 0.089   | 0.05     | 0.139  | 99.085% | 14.237% | 47.297%  | 19.073% |
++-----------------------+----------+--------+---------+----------+--------+---------+---------+----------+---------+
+| ReLU                  | 15       | 0.014  | 0.05    | 0.05     | 0.101  | 0.088%  | 8.11%   | 47.325%  | 13.847% |
++-----------------------+----------+--------+---------+----------+--------+---------+---------+----------+---------+
+| MaxPooling2D          | 5        | 0.005  | 0.023   | 0.006    | 0.029  | 0.03%   | 3.662%  | 5.343%   | 3.908%  |
++-----------------------+----------+--------+---------+----------+--------+---------+---------+----------+---------+
+| Reshape               | 1        | 0.0    | 0.0     | 0.0      | 0.0    | 0.0%    | 0.0%    | 0.0%     | 0.0%    |
++-----------------------+----------+--------+---------+----------+--------+---------+---------+----------+---------+
+| LinearFunction        | 3        | 0.124  | 0.461   | 0.0      | 0.461  | 0.798%  | 73.991% | 0.032%   | 63.171% |
++-----------------------+----------+--------+---------+----------+--------+---------+---------+----------+---------+
+| Softmax               | 1        | 0.0    | 0.0     | 0.0      | 0.0    | 0.0%    | 0.001%  | 0.003%   | 0.001%  |
++-----------------------+----------+--------+---------+----------+--------+---------+---------+----------+---------+
+| total                 | 38       | 15.488 | 0.623   | 0.107    | 0.729  | 100.0%  | 100.0%  | 100.0%   | 100.0%  |
++-----------------------+----------+--------+---------+----------+--------+---------+---------+----------+---------+
+```
+
+The other way is to manually specify the column list.
 
 ```
 >>> cost.show_report(unit='G', mode='table' , columns=[
@@ -172,128 +309,11 @@ In addition, you can specify which column to show as a table.
 +--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
 | Convolution2DFunction-2  | 1.850  | 0.012   | 0.012    | 0.024  | [(1, 64, 224, 224)]  | k=3, s=1, p=1, d=1, groups=1, nobias=False |
 +--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-2                   | 0.003  | 0.012   | 0.012    | 0.024  | [(1, 64, 224, 224)]  |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| MaxPooling2D-1           | 0.002  | 0.012   | 0.003    | 0.015  | [(1, 64, 112, 112)]  | k=2, s=2, p=0                              |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Convolution2DFunction-3  | 0.925  | 0.003   | 0.006    | 0.009  | [(1, 128, 112, 112)] | k=3, s=1, p=1, d=1, groups=1, nobias=False |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-3                   | 0.002  | 0.006   | 0.006    | 0.012  | [(1, 128, 112, 112)] |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Convolution2DFunction-4  | 1.850  | 0.007   | 0.006    | 0.013  | [(1, 128, 112, 112)] | k=3, s=1, p=1, d=1, groups=1, nobias=False |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-4                   | 0.002  | 0.006   | 0.006    | 0.012  | [(1, 128, 112, 112)] |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| MaxPooling2D-2           | 0.001  | 0.006   | 0.001    | 0.007  | [(1, 128, 56, 56)]   | k=2, s=2, p=0                              |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Convolution2DFunction-5  | 0.925  | 0.003   | 0.003    | 0.006  | [(1, 256, 56, 56)]   | k=3, s=1, p=1, d=1, groups=1, nobias=False |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-5                   | 0.001  | 0.003   | 0.003    | 0.006  | [(1, 256, 56, 56)]   |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Convolution2DFunction-6  | 1.850  | 0.005   | 0.003    | 0.008  | [(1, 256, 56, 56)]   | k=3, s=1, p=1, d=1, groups=1, nobias=False |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-6                   | 0.001  | 0.003   | 0.003    | 0.006  | [(1, 256, 56, 56)]   |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Convolution2DFunction-7  | 1.850  | 0.005   | 0.003    | 0.008  | [(1, 256, 56, 56)]   | k=3, s=1, p=1, d=1, groups=1, nobias=False |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-7                   | 0.001  | 0.003   | 0.003    | 0.006  | [(1, 256, 56, 56)]   |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| MaxPooling2D-3           | 0.001  | 0.003   | 0.001    | 0.004  | [(1, 256, 28, 28)]   | k=2, s=2, p=0                              |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Convolution2DFunction-8  | 0.925  | 0.005   | 0.001    | 0.007  | [(1, 512, 28, 28)]   | k=3, s=1, p=1, d=1, groups=1, nobias=False |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-8                   | 0      | 0.001   | 0.001    | 0.003  | [(1, 512, 28, 28)]   |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Convolution2DFunction-9  | 1.850  | 0.010   | 0.001    | 0.012  | [(1, 512, 28, 28)]   | k=3, s=1, p=1, d=1, groups=1, nobias=False |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-9                   | 0      | 0.001   | 0.001    | 0.003  | [(1, 512, 28, 28)]   |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Convolution2DFunction-10 | 1.850  | 0.010   | 0.001    | 0.012  | [(1, 512, 28, 28)]   | k=3, s=1, p=1, d=1, groups=1, nobias=False |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-10                  | 0      | 0.001   | 0.001    | 0.003  | [(1, 512, 28, 28)]   |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| MaxPooling2D-4           | 0      | 0.001   | 0        | 0.002  | [(1, 512, 14, 14)]   | k=2, s=2, p=0                              |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Convolution2DFunction-11 | 0.462  | 0.009   | 0        | 0.010  | [(1, 512, 14, 14)]   | k=3, s=1, p=1, d=1, groups=1, nobias=False |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-11                  | 0      | 0       | 0        | 0.001  | [(1, 512, 14, 14)]   |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Convolution2DFunction-12 | 0.462  | 0.009   | 0        | 0.010  | [(1, 512, 14, 14)]   | k=3, s=1, p=1, d=1, groups=1, nobias=False |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-12                  | 0      | 0       | 0        | 0.001  | [(1, 512, 14, 14)]   |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Convolution2DFunction-13 | 0.462  | 0.009   | 0        | 0.010  | [(1, 512, 14, 14)]   | k=3, s=1, p=1, d=1, groups=1, nobias=False |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-13                  | 0      | 0       | 0        | 0.001  | [(1, 512, 14, 14)]   |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| MaxPooling2D-5           | 0      | 0       | 0        | 0      | [(1, 512, 7, 7)]     | k=2, s=2, p=0                              |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Reshape-1                | 0      | 0       | 0        | 0      | [(1, 25088)]         | in_shape=(1, 512, 7, 7), out_shape=(1, -1) |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| LinearFunction-1         | 0.103  | 0.383   | 0        | 0.383  | [(1, 4096)]          | nobias=False                               |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-14                  | 0      | 0       | 0        | 0      | [(1, 4096)]          |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| LinearFunction-2         | 0.017  | 0.063   | 0        | 0.063  | [(1, 4096)]          | nobias=False                               |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ReLU-15                  | 0      | 0       | 0        | 0      | [(1, 4096)]          |                                            |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| LinearFunction-3         | 0.004  | 0.015   | 0        | 0.015  | [(1, 1000)]          | nobias=False                               |
-+--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| Softmax-1                | 0      | 0       | 0        | 0      | [(1, 1000)]          | axis=1                                     |
+| ...                      | ...    | ...     | ...      | ...    | ...								   | ...                                        |
 +--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
 | total                    | 15.488 | 0.623   | 0.107    | 0.729  |                      |                                            |
 +--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
 ```
-
-
-## Usage
-
-As for basic usage, please refer to the avobe quickstart.
-
-
-### Unify FMA mode
-
-When `fma_1flop` is set to `True`, chainer_computational_cost considers
-FMA (fused multiply and add, `ax + b`) as one operation.
-Otherwise, it counts as 2 operations.
-
-This affects to convolution and linear layers' estimation.
-
-
-### Reporting
-
-Estimated computational cost table is reported by calling `show_report` method.
-
-Currently it supports the following modes.
-
-* CSV mode (`mode='csv'`)
-* Markdown table (`mode='md'`)
-* Prettified table (`mode='table'`)
-
-By default, report is written to stdout.
-You can specify stream (e.g. file object) to `dst` argument.
-
-```python
-cost.show_report(ost=sys.stderr, unit='G', mode='md')
-```
-
-Also, the following unit prefixes are supported by `unit` argument.
-
-* `None`: if you want to use raw values
-* `K`: 10^3 (for FLOPs) or 1024^1 (for memory report)
-* `M`: 10^6 or 1024^2
-* `G`: 10^9 or 1024^3
-* `T`: 10^12 or 1024^4
-
-For memory report, the unit will be shown as like `Ki` or `Mi`.
-
-In addition, you can specify how many digits after the decimal point to show to
-`n_digits` argument.
-By default it's 3, possible values are between 0 (round to integer) to 10, and
-if `None` is specified it is treated as 10.
-Be noted that you do not need to worry about numerical error in summary report
-due to the rounding, because summary values are calculated before rounding.
 
 
 ### Access to the detailed report
@@ -316,17 +336,14 @@ It is a huge dictionary whose structure is:
         "mread": 609280,
         "mwrite": 12845056,
         "mrw": 13454336,
-        "traceback": ...,
-        "input_shapes": [[1, 3, 224, 224], [64, 3, 3, 3],[64]],
+        "traceback": "...",
+        "input_shapes": [[1, 3, 224, 224], [64, 3, 3, 3], [ 4]],
         "output_shapes": [[1, 64, 224, 224]],
-        "params": {
-            "k": 3,
-            "s": 1,
-            "p": 1,
-            "d": 1,
-            "groups": 1,
-            "nobias": false
-        }
+        "params": {"k": 3, "s": 1, "p": 1, "d": 1, "groups": 1, "nobias": false},
+        "flops%": 0.5597995752663483,
+        "mread%": 0.09112725854650683,
+        "mwrite%": 11.21102960110868,
+        "mrw%": 1.7179140987382209
     },
     "ReLU-1": {
         "name": "ReLU-1",
@@ -338,7 +355,11 @@ It is a huge dictionary whose structure is:
         "traceback": ...,
         "input_shapes": [[1, 64, 224, 224]],
         "output_shapes": [[1, 64, 224, 224]],
-        "params": {}
+        "params": {},
+        "flops%": 0.020733317602457342,
+        "mread%": 1.9211770272392967,
+        "mwrite%": 11.21102960110868,
+        "mrw%": 3.2802366168768162
     },
 	  ...
 }
@@ -351,34 +372,46 @@ This contains total costs for each type of layers.
 ```python
 >>> cost.summary_report
 {
-    "total": {
-        "type": "total",
-        "name": "total",
-        "n_layers": 38,
-        "flops": 15488423327,
-        "mread": 668603456,
-        "mwrite": 114575168,
-        "mrw": 783178624
-    },
     "Convolution2DFunction": {
         "type": "Convolution2DFunction",
         "name": "Convolution2DFunction",
-        "n_layers": 13,
         "flops": 15346630656,
+        "n_layers": 13,
         "mread": 95186176,
         "mwrite": 54190080,
-        "mrw": 149376256
+        "mrw": 149376256,
+        "flops%": 99.08452482214363,
+        "mread%": 14.236566554630553,
+        "mwrite%": 47.29653112967724,
+        "mrw%": 19.07307623350047
     },
     "ReLU": {
         "type": "ReLU",
         "name": "ReLU",
-        "n_layers": 15,
         "flops": 13555712,
+        "n_layers": 15,
         "mread": 54222848,
         "mwrite": 54222848,
-        "mrw": 108445696
+        "mrw": 108445696,
+        "flops%": 0.08752157475169971,
+        "mread%": 8.109866545469965,
+        "mwrite%": 47.32513069498619,
+        "mrw%": 13.846866178002324
     },
 	  ...
+    "total": {
+        "name": "total",
+        "type": "total",
+        "flops": 15488423327,
+        "n_layers": 38,
+        "mread": 668603456,
+        "mwrite": 114575168,
+        "mrw": 783178624,
+        "flops%": 100.0,
+        "mread%": 100.0,
+        "mwrite%": 100.0,
+        "mrw%": 100.0
+    }
 }
 ```
 
