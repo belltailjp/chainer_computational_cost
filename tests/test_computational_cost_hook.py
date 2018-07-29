@@ -283,6 +283,14 @@ def test_show_report_unit_and_digits():
 
     col_flops, col_mr, col_mw, col_mrw = (1, 2, 3, 4)
 
+    # Case: default columns check
+    report_cols = ['Layer name', 'GFLOPs',
+                   'MemRead GiB', 'MemWrite GiB', 'MemR+W GiB']
+    assert report_cols == show_report()[0]
+    summary_cols = ['Layer type', '# Layers', 'GFLOPs',
+                    'MemRead GiB', 'MemWrite GiB', 'MemR+W GiB']
+    assert summary_cols == show_summary_report()[0]
+
     # Case unit=None: raw values are shown
     expected = {col_flops: '2415919104', col_mr: '16851200',
                 col_mw: '33554432', col_mrw: '50405632'}

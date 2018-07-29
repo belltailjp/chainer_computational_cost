@@ -9,6 +9,44 @@ from chainer_computational_cost.cost_calculators import calculators
 from chainer_computational_cost.cost_calculators import check_signature
 
 
+class ReportColumns(object):
+    """Predefined column definitions used for ComputationalCostHook.show_report
+
+    User should specify an array of column names to report to the `columns`
+    argument of `ComputationalCostHook.show_report` method.
+    This class provides some predefined sets. `DEFAULT` is set as a
+    default. You can either specify like
+    `cost.show_report(columns=ReportColumns.ALL)` or manually pass a list of
+    column name that you exactly want to look.
+
+    * DEFAULT: default columns
+    * DEFAULT_AND_PERCENT: in addition to defaults, percentage columns are
+      shown
+    * ALL: all the possible columns, including input/output shape and
+      supplemental informations for each layer
+    """
+    DEFAULT = ['name', 'flops', 'mread', 'mwrite', 'mrw']
+    DEFAULT_AND_PERCENT = ['name', 'flops', 'mread', 'mwrite', 'mrw',
+                           'flops%', 'mread%', 'mwrite%', 'mrw%']
+    ALL = ['name', 'flops', 'mread', 'mwrite', 'mrw',
+           'flops%', 'mread%', 'mwrite%', 'mrw%',
+           'input_shapes', 'output_shapes', 'params']
+
+
+class SummaryColumns(object):
+    """Predefined column definitions used for ComputationalCostHook.show_summary_report
+
+    Similar to `ReportColumns`, this is used for the `columns` argument of
+    `ComputationalCostHook.show_summary_report` method.
+
+    * DEFAULT: default columns
+    * ALL: in addition to defaults, percentage columns are shown
+    """     # NOQA
+    DEFAULT = ['type', 'n_layers', 'flops', 'mread', 'mwrite', 'mrw']
+    ALL = ['type', 'n_layers', 'flops', 'mread', 'mwrite', 'mrw',
+           'flops%', 'mread%', 'mwrite%', 'mrw%']
+
+
 class ComputationalCostHook(chainer.FunctionHook):
     """Calculate theoretical computational cost of neural networks.
 
@@ -20,6 +58,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         fma_1flop: Specify `True` when you want to treat FMA (ax+b) as one
             floating point operation (default=`True`). Otherwise it is 2.
     """
+
     _flops_coeff_table = {
         None: 1, 'K': 10**3, 'M': 10**6, 'G': 10**9, 'T': 10**12
     }
@@ -303,8 +342,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         return copy.deepcopy(self._ignored_layers)
 
     def show_summary_report(self, ost=sys.stdout, mode='csv', unit='G',
-                            columns=['type', 'n_layers', 'flops', 'mread',
-                                     'mwrite', 'mrw'], n_digits=3):
+                            columns=SummaryColumns.DEFAULT, n_digits=3):
         """Show computational cost aggregated for each layer type.
 
         Summarizes based on chainer function. Every call of same function
@@ -337,8 +375,7 @@ class ComputationalCostHook(chainer.FunctionHook):
                                columns, n_digits)
 
     def show_report(self, ost=sys.stdout, mode='csv', unit='G',
-                    columns=['name', 'flops', 'mread', 'mwrite', 'mrw'],
-                    n_digits=3):
+                    columns=ReportColumns.DEFAULT, n_digits=3):
         """Show computational cost aggregated for each layer.
 
         Every single call of a function will appear as a row.
