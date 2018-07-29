@@ -62,7 +62,8 @@ def test_simple_net():
         'Reshape-1',
         'LinearFunction-1',
         'ReLU-4',
-        'LinearFunction-2'
+        'LinearFunction-2',
+        'total'
     ]
 
     # check parameters are properly reported
@@ -99,6 +100,66 @@ def test_repeat():
                 cost.show_report(mode=mode)
                 cost.show_summary_report(mode=mode)
             assert cost.layer_report == layer_report
+
+
+def test_report_property_keeps_internal_state():
+    x = np.random.randn(1, 3, 32, 32).astype(np.float32)
+    net = SimpleConvNet()
+    with chainer.using_config('train', False):
+        with chainer_computational_cost.ComputationalCostHook() as cost:
+            net(x)
+
+            for rep_name in ['layer_report', 'summary_report',
+                             'total_report', 'ignored_layers']:
+                # try to contaminate report
+                rep = getattr(cost, rep_name)
+                rep['hooo'] = 'hello'
+
+                # but it does never break cost's internal state
+                assert 'hooo' not in getattr(cost, rep_name)
+
+
+def test_report_property_inserts_total_element():
+    x = np.random.randn(1, 3, 32, 32).astype(np.float32)
+    net = SimpleConvNet()
+    with chainer.using_config('train', False):
+        with chainer_computational_cost.ComputationalCostHook() as cost:
+            net(x)
+            total1 = cost.layer_report['total']
+            total2 = cost.summary_report['total']
+            assert total1 == total2
+            assert total1['flops'] == cost.total_report['flops']
+            assert total1['mread'] == cost.total_report['mread']
+            assert total1['mwrite'] == cost.total_report['mwrite']
+            assert total1['mrw'] == cost.total_report['mrw']
+            assert total1['flops%'] == 100.0
+            assert total1['mread%'] == 100.0
+            assert total1['mwrite%'] == 100.0
+            assert total1['mrw%'] == 100.0
+
+            # but it doesn't break internal state
+            assert 'total' not in cost._layer_report
+            assert 'total' not in cost._summary_report
+
+
+def test_report_property_inserts_percentage():
+    x = np.random.randn(1, 3, 32, 32).astype(np.float32)
+    net = SimpleConvNet()
+    with chainer.using_config('train', False):
+        with chainer_computational_cost.ComputationalCostHook() as cost:
+            net(x)
+
+            keys = 'flops%', 'mread%', 'mwrite%', 'mrw%'
+            for rep in cost.layer_report.values():
+                assert all(k in rep for k in keys)
+            for rep in cost.summary_report.values():
+                assert all(k in rep for k in keys)
+
+            # but it doesn't break internal state
+            for rep in cost._layer_report.values():
+                assert all(k not in rep for k in keys)  # NOT!
+            for rep in cost._layer_report.values():
+                assert all(k not in rep for k in keys)  # NOT!
 
 
 def test_custom_cost_calculator():

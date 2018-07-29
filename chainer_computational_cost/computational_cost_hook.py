@@ -1,6 +1,5 @@
 from collections import OrderedDict
 import copy
-import itertools
 import sys
 import traceback
 import warnings
@@ -35,6 +34,10 @@ class ComputationalCostHook(chainer.FunctionHook):
         'mread': 'MemRead\n{1}B',   # {1} is ki, Mi, Gi, ...
         'mwrite': 'MemWrite\n{1}B',
         'mrw': 'MemR+W\n{1}B',
+        'flops%': 'FLOPs\n(%)',
+        'mread%': 'MemRead\n(%)',
+        'mwrite%': 'MemWrite\n(%)',
+        'mrw%': 'MemR+W\n(%)',
         'input_shapes': 'Input shapes',
         'output_shapes': 'Output shapes',
         'params': 'Function parameters'
@@ -46,9 +49,12 @@ class ComputationalCostHook(chainer.FunctionHook):
         self._fma_1flop = fma_1flop
         self._label_count = dict()
 
-        self.layer_report = OrderedDict()
-        self.summary_report = OrderedDict()
-        self.ignored_layers = OrderedDict()
+        self._layer_report = OrderedDict()
+        self._summary_report = OrderedDict()
+        self._ignored_layers = OrderedDict()
+        self._total_report = {
+            'name': 'total', 'type': 'total'
+        }
 
     def add_custom_cost_calculator(self, func_type, calculator):
         """Add custom cost calculator function.
@@ -125,6 +131,9 @@ class ComputationalCostHook(chainer.FunctionHook):
         tb = traceback.format_list(tb)
         return ''.join(tb).strip()
 
+    def _get_fqn(self, func_type):
+        return "{}.{}".format(func_type.__module__, func_type.__name__)
+
     def forward_postprocess(self, function, in_data):
         """Hook function called by chainer.
 
@@ -153,7 +162,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             fqn = self._get_fqn(func_type)
             warnings.warn("{} is not yet supported by "
                           "ComputationalCostHook, ignored".format(fqn))
-            self.ignored_layers[name] = {
+            self._ignored_layers[name] = {
                 'type': label,
                 'traceback': self._get_stack_trace(),
                 'input_shapes': input_shapes,
@@ -183,7 +192,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         mread *= itemsize
         mwrite *= itemsize
 
-        self.layer_report[name] = {
+        self._layer_report[name] = {
             'name': name,
             'type': label,
             'flops': flops,
@@ -196,21 +205,102 @@ class ComputationalCostHook(chainer.FunctionHook):
             'params': params
         }
 
-        for label in ('total', label):
-            if label not in self.summary_report:
-                self.summary_report[label] = {
-                    'type': label, 'name': label, 'n_layers': 0,
-                    'flops': 0, 'mread': 0, 'mwrite': 0, 'mrw': 0
-                }
-            report = self.summary_report[label]
-            report['flops'] += flops
-            report['n_layers'] += 1
-            report['mread'] += mread
-            report['mwrite'] += mwrite
-            report['mrw'] += mread + mwrite
+        if label not in self._summary_report:
+            self._summary_report[label] = {'type': label, 'name': label}
 
-    def _get_fqn(self, func_type):
-        return "{}.{}".format(func_type.__module__, func_type.__name__)
+        # Make layer type wise summary and overall summary
+        for report in (self._summary_report[label], self._total_report):
+            report['flops'] = report.get('flops', 0) + flops
+            report['n_layers'] = report.get('n_layers', 0) + 1
+            report['mread'] = report.get('mread', 0) + mread
+            report['mwrite'] = report.get('mwrite', 0) + mwrite
+            report['mrw'] = report.get('mrw', 0) + mread + mwrite
+
+    def _insert_percentage(self, records):
+        if len(records) == 0:
+            return OrderedDict()
+
+        # Insert "total" at the bottom
+        records = copy.deepcopy(records)
+        records['total'] = self.total_report
+
+        # Insert percentage columns
+        total = self.total_report
+        for record in records.values():
+            for key in ('flops', 'mread', 'mwrite', 'mrw'):
+                record[key + '%'] = 100.0 * record[key] / total[key]
+        return records
+
+    @property
+    def layer_report(self):
+        """Get computational cost estimation of all layers
+
+        Layer-wise cost estimaion is returned as an OrderedDict.
+        The record is sorted in the ascending order by the time each layer is
+        called.
+
+        Key of the dict is a name of a layer in `str`. This name is
+        automatically determined by chainer-computational-cost.
+        Value is a `dict` of estimatied computational costs and some
+        supplemental information as follows
+        * `type`: type of the layer (name of `Function` class)
+        * `name`: layer name "(type)-(order)", unique in the hook object
+          lieftime
+        * `flops`, `mread`, `mwrite` and `mrw`: computational cost estimations
+        * `flops%`, `mread%`, `mwrite%` and `mrw%`: percentage of estimations
+        * `traceback`: where the layer is called in the source code
+        * `input_shapes` and `output_shapes`
+
+        The last item of the returned records is "total".
+
+        Even if you change the content of the returned value,
+        that will not affect to the internal state of the hook object.
+        """
+        return self._insert_percentage(self._layer_report)
+
+    @property
+    def summary_report(self):
+        """Get layer type wise computational cost estimation
+
+        Similar to `layer_report` but each cost is summarized for each layer
+        type. It has the following elements.
+        * `type` and `name`: type of the layer (same value)
+        * `n_layers`: number of this type of layer in the network
+        * `flops`, `mread`, `mwrite` and `mrw`: computational cost estimations
+        * `flops%`, `mread%`, `mwrite%` and `mrw%`: percentage of estimations
+
+        It also has the record "total" in the last.
+
+        Even if you change the content of the returned value,
+        that will not affect to the internal state of the hook object.
+        """
+        return self._insert_percentage(self._summary_report)
+
+    @property
+    def total_report(self):
+        """Total computational cost caught during the hook lifetime
+
+        It returns a `dict` with the following elements
+        * `name` = `type` = `'total'`
+        * `n_layers`: number of this type of layer in the network
+        * `flops`, `mread`, `mwrite` and `mrw`: computational cost estimations
+
+        Even if you change the content of the returned value,
+        that will not affect to the internal state of the hook object.
+        """
+        return copy.deepcopy(self._total_report)
+
+    @property
+    def ignored_layers(self):
+        """List of ignored layers
+
+        When a layer whose type is not supported by chainer-computational-cost
+        yet, it is ignored and recorded into `ignored_layers`.
+
+        Even if you change the content of the returned value,
+        that will not affect to the internal state of the hook object.
+        """
+        return copy.deepcopy(self._ignored_layers)
 
     def show_summary_report(self, ost=sys.stdout, mode='csv', unit='G',
                             columns=['type', 'n_layers', 'flops', 'mread',
@@ -243,10 +333,8 @@ class ComputationalCostHook(chainer.FunctionHook):
             warnings.warn("No chainer function is caught during "
                           "lifetime of the hook")
             return
-        # bring 'total' to the last
-        report = copy.deepcopy(self.summary_report)
-        report['total'] = report.pop('total')
-        self._show_report_body(report, ost, mode, unit, columns, n_digits)
+        self._show_report_body(self.summary_report, ost, mode, unit,
+                               columns, n_digits)
 
     def show_report(self, ost=sys.stdout, mode='csv', unit='G',
                     columns=['name', 'flops', 'mread', 'mwrite', 'mrw'],
@@ -278,12 +366,8 @@ class ComputationalCostHook(chainer.FunctionHook):
             warnings.warn("No chainer function is caught during "
                           "lifetime of the hook")
             return
-        # add 'total' to the last
-        total = {'total': self.summary_report['total']}
-        report = itertools.chain(self.layer_report.items(), total.items())
-        report = OrderedDict(report)
-        report = copy.deepcopy(report)
-        self._show_report_body(report, ost, mode, unit, columns, n_digits)
+        self._show_report_body(self.layer_report, ost, mode, unit,
+                               columns, n_digits)
 
     def _show_report_body(self, report, ost, mode, unit, cols,
                           n_digits):
@@ -325,11 +409,16 @@ class ComputationalCostHook(chainer.FunctionHook):
         # make table records
         table_report = [header]
         for layer, rep in report.items():
+            # round estimations (and add prefixed unit)
             if unit != '':
                 flops = rounder(float(rep['flops']) / coeff_flops)
                 rep['flops'] = flops
                 for c in ('mread', 'mwrite', 'mrw'):
                     rep[c] = rounder(float(rep[c]) / coeff_bytes)
+
+            # round percentage field
+            for c in ('flops%', 'mread%', 'mwrite%', 'mrw%'):
+                rep[c] = rounder(rep[c]) + '%'
 
             if 'params' in rep:
                 rep['params'] = self._prettify_dict(rep['params'])
