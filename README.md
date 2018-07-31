@@ -60,8 +60,23 @@ However,
 ## Installation
 
 ```bash
-% python setup.py install
+% pip install chainer_computational_cost
 ```
+
+Manual installation by
+
+```bash
+% git clone git@github.com:belltailjp/chainer_computational_cost.git
+% cd chainer_computational_cost
+% python setup.py
+```
+
+or
+
+```bash
+% pip install git+https://github.com/belltailjp/chainer_computational_cost.git
+```
+
 
 ## Quick Start
 
