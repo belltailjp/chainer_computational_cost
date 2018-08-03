@@ -1,0 +1,16 @@
+language: python
+python:
+  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+install:
+  - pip install chainer==4.3.1
+  - pip install texttable==1.4.0
+  - pip install flake8==2.5.5
+  - pip install pytest==3.5.1
+  - pip install pytest-cov==2.5.1
+script:
+  - python -m pytest --cov
+  - flake8 .
