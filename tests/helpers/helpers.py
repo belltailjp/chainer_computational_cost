@@ -77,8 +77,10 @@ def require_chainer_version(ver_oldest, ver_newest=None):
 
     This is useful when the version of Chainer the current environment has does
     not suppor the operator that the test case tests.
-    For example, Chaienr v3 doesn't have Shift operator, so the test case for
-    Shift can have `@require_chainer_version('3.0.0')` decorator.
+    For example, Chaienr v3 doesn't have `groups` argument in Convolution2D.
+    It cannot be checked by @require_import decorator so in this case
+    this making use of this decorator like `@require_chainer_version('4.0.0')`
+    would be appropriate.
 
     Args:
         ver_oldest: Version string of lower bound (inclusive).
