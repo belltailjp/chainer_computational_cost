@@ -1,6 +1,6 @@
 from collections import OrderedDict
 import inspect
-import sys
+import six
 import warnings
 
 
@@ -19,7 +19,7 @@ def check_signature(func):
     if not callable(func):
         return False
 
-    if sys.version_info < (3,):
+    if six.PY2:
         p = inspect.getargspec(func)
         if len(p.args) != 2 or p.varargs is not None or p.keywords is None:
             return False
