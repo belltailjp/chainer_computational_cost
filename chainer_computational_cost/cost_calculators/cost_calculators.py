@@ -1,9 +1,10 @@
+from collections import OrderedDict
 import inspect
 import sys
 import warnings
 
 
-calculators = dict()
+calculators = OrderedDict()
 
 
 def check_signature(func):
