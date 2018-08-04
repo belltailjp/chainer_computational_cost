@@ -8,6 +8,8 @@ from chainer.functions.connection.deconvolution_2d \
 from chainer.functions.connection.linear import LinearFunction
 
 from helpers import calculate_cost
+from helpers import require_chainer_version
+from helpers import require_import
 
 
 def test_conv2d_with_bias_fma():
@@ -90,6 +92,7 @@ def test_conv2d_nobias_no_fma():
     }
 
 
+@require_chainer_version('4.0.0')
 def test_conv2d_grouped_with_bias_fma():
     (c_in, h_in, w_in), (c_out, h_out, w_out) = (8, 10, 10), (12, 10, 10)
     k = 3
@@ -110,6 +113,7 @@ def test_conv2d_grouped_with_bias_fma():
     }
 
 
+@require_chainer_version('4.0.0')
 def test_conv2d_grouped_nobias_no_fma():
     (c_in, h_in, w_in), (c_out, h_out, w_out) = (8, 10, 10), (12, 10, 10)
     k = 3
@@ -204,6 +208,7 @@ def test_deconv2d_with_nobias_no_fma():
     }
 
 
+@require_chainer_version('4.0.0')
 def test_deconv2d_grouped_with_bias_fma():
     (c_in, h_in, w_in), (c_out, h_out, w_out) = (8, 10, 10), (12, 21, 21)
     k = 3
@@ -260,6 +265,7 @@ def test_linear_withbias_fma():
     assert params == {'nobias': False}
 
 
+@require_import('chainer.functions.connection.shift.Shift')
 def test_shift():
     x = np.random.randn(1, 32, 10, 10).astype(np.float32)
     f = F.connection.shift.Shift(ksize=3, dilate=1)

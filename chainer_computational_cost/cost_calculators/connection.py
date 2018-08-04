@@ -5,7 +5,6 @@ from chainer.functions.connection.convolution_2d \
 from chainer.functions.connection.deconvolution_2d \
     import Deconvolution2DFunction
 from chainer.functions.connection.linear import LinearFunction
-from chainer.functions.connection.shift import Shift
 
 from chainer.utils.conv import get_conv_outsize
 from chainer.utils.conv import get_deconv_outsize
@@ -211,7 +210,7 @@ def calc_linear(func, in_data, **kwargs):
     return (flops, mread, mwrite, params)
 
 
-@register(Shift)
+@register('chainer.functions.connection.shift.Shift')
 def calc_shift(func, in_data, **kwargs):
     """[Shift](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.shift.html)
 
