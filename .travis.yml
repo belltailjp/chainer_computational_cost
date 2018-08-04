@@ -11,6 +11,7 @@ env:
   - CHAINER_VERSION=5.0.0b3
 install:
   - pip install chainer==$CHAINER_VERSION
+  - pip install six==1.11.0
   - pip install texttable==1.4.0
   - pip install flake8==2.5.5
   - pip install pytest==3.5.1

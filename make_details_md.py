@@ -1,8 +1,8 @@
 import inspect
 import os
 import re
+import six.moves.urllib as urllib
 import textwrap
-import urllib
 import warnings
 
 from chainer_computational_cost.cost_calculators import calculators
