@@ -4,7 +4,11 @@ import inspect
 import six
 import warnings
 
-calculators = OrderedDict()
+calculators = OrderedDict()     # active calculators
+
+# all the calculators including those cannot be activated
+# (not disclosed to outside, but used by make_details_md.py)
+all_calculators = OrderedDict()
 
 
 def check_signature(func):
@@ -62,6 +66,7 @@ def register(func):
         registered for.
     """
     if type(func) is str:
+        func_name = func
         try:
             # F.activation.relu.ReLU -> ['F.activation.relu', 'ReLU']
             func_module, func_class = func.rsplit('.', 1)
@@ -79,6 +84,11 @@ def register(func):
         elif func is not None:
             # If the function exists
             calculators[func] = calculator
+            all_calculators[func] = calculator
+        else:
+            # register all the defined calculators including those cannot be
+            # activated (e.g. chainer in this env is too old)
+            all_calculators[func_name] = calculator
 
         def f(*args, **kwargs):
             return calculator(*args, **kwargs)

@@ -5,7 +5,8 @@ import six.moves.urllib as urllib
 import textwrap
 import warnings
 
-from chainer_computational_cost.cost_calculators import calculators
+from chainer_computational_cost.cost_calculators.cost_calculators import \
+    all_calculators
 
 head = """
     # Details of theoretical computational costs
@@ -50,9 +51,18 @@ if __name__ == "__main__":
     table_of_contents = ["## Table of contents", '']
 
     chapters = set()
-    for t, f in calculators.items():
+    for t, f in all_calculators.items():
         if f.__doc__ is None:
             continue
+
+        # in most cases t is type object of a FunctionNode class,
+        # but when the cost calculator cannot be registered,
+        # it can be a string of fully qualified class name of a FunctionNode.
+        # (see how @register decorator makes all_calculators)
+        if type(t) is str:
+            t = t.split('.')[-1]    # F.activation.relu.ReLU -> ReLU
+        else:
+            t = t.__name__
 
         # "/path/to/activation.py" -> "Activation"
         src_file = os.path.basename(inspect.getfile(f))
@@ -76,10 +86,10 @@ if __name__ == "__main__":
 
         # h2 should be same as chainer's function eg PReLUFunction
         # so that it can automatically generate anchor links
-        if t.__name__ not in func_name:
+        if t not in func_name:
             warnings.error("docstring header \"{}\" doesn't contain full"
-                           "function name {}".format(func_name, t.__name__))
-        fmt = "  * [{}](#{})".format(t.__name__, t.__name__.lower())
+                           "function name {}".format(func_name, t))
+        fmt = "  * [{}](#{})".format(t, t.lower())
         table_of_contents.append(fmt)
 
     with open("DETAILS.md", "wt") as f:
