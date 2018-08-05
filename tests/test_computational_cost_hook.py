@@ -1,7 +1,6 @@
 from collections import OrderedDict
 import copy
-import io
-import sys
+import six
 
 import chainer
 import chainer.functions as F
@@ -251,12 +250,7 @@ def test_show_report_unit_and_digits():
     assert ccost.summary_report['total']['mrw'] == 50405632
 
     def _report(report_func, **kwargs):
-        # py2 support: csv and md mode doesn't support StringIO
-        # cf. https://stackoverflow.com/questions/13120127
-        if kwargs.get('mode') == 'table' or (3, 0) <= sys.version_info:
-            sio = io.StringIO()
-        else:
-            sio = io.BytesIO()
+        sio = six.StringIO()
         report_func(sio, **kwargs)
         s = sio.getvalue()
 

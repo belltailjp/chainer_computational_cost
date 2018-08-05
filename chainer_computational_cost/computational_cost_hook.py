@@ -406,19 +406,19 @@ class ComputationalCostHook(chainer.FunctionHook):
         self._show_report_body(self.layer_report, ost, mode, unit,
                                columns, n_digits)
 
+    def _round_to_s(self, t, n_digits):
+        # internal use only from _show_report_body
+        return str(int(round(t, 0)) if n_digits == 0 else round(t, n_digits))
+
     def _show_report_body(self, report, ost, mode, unit, cols,
                           n_digits):
+
         if n_digits is None or self.max_digits < n_digits:
             n_digits = self.max_digits
         if not isinstance(n_digits, int) or n_digits < 0:
             raise ValueError("n_digits must be either None or an integer "
                              "larger or equal to 0, but {} ({}) is specified"
                              .format(n_digits, type(n_digits)))
-
-        if n_digits == 0:
-            rounder = lambda t: str(int(round(t, 0)))
-        else:
-            rounder = lambda t: str(round(t, n_digits))
 
         # check cols
         rep = list(report.values())[0]
@@ -448,14 +448,16 @@ class ComputationalCostHook(chainer.FunctionHook):
         for layer, rep in report.items():
             # round estimations (and add prefixed unit)
             if unit != '':
-                flops = rounder(float(rep['flops']) / coeff_flops)
+                flops = float(rep['flops']) / coeff_flops
+                flops = self._round_to_s(flops, n_digits)
                 rep['flops'] = flops
                 for c in ('mread', 'mwrite', 'mrw'):
-                    rep[c] = rounder(float(rep[c]) / coeff_bytes)
+                    size = float(rep[c]) / coeff_bytes
+                    rep[c] = self._round_to_s(size, n_digits)
 
             # round percentage field
             for c in ('flops%', 'mread%', 'mwrite%', 'mrw%'):
-                rep[c] = rounder(rep[c]) + '%'
+                rep[c] = self._round_to_s(rep[c], n_digits) + '%'
 
             if 'params' in rep:
                 rep['params'] = self._prettify_dict(rep['params'])

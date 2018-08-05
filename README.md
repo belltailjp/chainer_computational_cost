@@ -1,5 +1,8 @@
 # chainer-computational-cost
 
+[![Build Status](https://travis-ci.org/belltailjp/chainer_computational_cost.svg?branch=master)](https://travis-ci.org/belltailjp/chainer_computational_cost)
+[![Coverage Status](https://coveralls.io/repos/github/belltailjp/chainer_computational_cost/badge.svg?branch=travis)](https://coveralls.io/github/belltailjp/chainer_computational_cost?branch=travis)
+
 This is a tool to estimate theoretical computational cost
 of a chainer-based neural network forward pass.
 
@@ -51,8 +54,9 @@ However,
 
 ## Requirements
 
-* python 3.6 or 2.7
-* chainer >= 4.0.0
+* Python 2.7, 3.3, 3.4, 3.5 and 3.6
+* Chainer 3.5, 4.x, 5.0.0b3
+* six==1.11.0
 * (optional) texttable >= 1.4.0
 * (optional) pytest >= 3.5.1
 
@@ -561,6 +565,12 @@ or implement a new feataure.
 % pip install pytest
 % python -m pytest
 ```
+
+Every PRs will be automatically tested by
+[Travis CI](https://travis-ci.org/belltailjp/chainer_computational_cost)
+and code coverage of the test is monitored by
+[coveralls](https://coveralls.io/github/belltailjp/chainer_computational_cost).
+Please make sure your PR becomes all green.
 
 
 ### Documentation

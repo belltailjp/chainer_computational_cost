@@ -5,7 +5,6 @@ from chainer.functions.connection.convolution_2d \
 from chainer.functions.connection.deconvolution_2d \
     import Deconvolution2DFunction
 from chainer.functions.connection.linear import LinearFunction
-from chainer.functions.connection.shift import Shift
 
 from chainer.utils.conv import get_conv_outsize
 from chainer.utils.conv import get_deconv_outsize
@@ -66,10 +65,10 @@ def calc_conv2d(func, in_data, **kwargs):
 
     batch_size, in_c, in_h, in_w = x.shape
     out_c, _, kh, kw = W.shape
-    g = func.groups
+    g = func.groups if hasattr(func, 'groups') else 1
     sy, sx = int(func.sy), int(func.sx)
     ph, pw = int(func.ph), int(func.pw)
-    dy, dx = int(func.dy), int(func.dx)
+    dy, dx = (int(func.dy), int(func.dx)) if hasattr(func, 'dx') else (1, 1)
 
     out_h = get_conv_outsize(in_h, kh, sy, ph, cover_all=func.cover_all, d=dy)
     out_w = get_conv_outsize(in_w, kw, sx, pw, cover_all=func.cover_all, d=dx)
@@ -93,7 +92,7 @@ def calc_conv2d(func, in_data, **kwargs):
         's': (sx if sx == sy else (sy, sx)),
         'p': (pw if pw == ph else (ph, pw)),
         'd': (dx if dx == dy else (dy, dx)),
-        'groups': func.groups, 'nobias': b is None
+        'groups': g, 'nobias': b is None
     }
     return (flops * batch_size, mread, mwrite, params)
 
@@ -134,13 +133,17 @@ def calc_deconv2d(func, in_data, **kwargs):
 
     batch_size, in_c, in_h, in_w = x.shape
     _, out_c, kh, kw = W.shape
-    g = func.groups
+    g = func.groups if hasattr(func, 'groups') else 1
+    dy, dx = (int(func.dy), int(func.dx)) if hasattr(func, 'dx') else (1, 1)
     # here, out_c obtained from W is already grouped
     # so the real output channels is out_c * g
 
-    out_h = get_deconv_outsize(in_h, kh, func.sy, func.ph, d=func.dy)
-    out_w = get_deconv_outsize(in_w, kw, func.sx, func.pw, d=func.dx)
-    print(out_c, out_h, out_w)
+    if dy != 1:
+        out_h = get_deconv_outsize(in_h, kh, func.sy, func.ph, d=dy)
+        out_w = get_deconv_outsize(in_w, kw, func.sx, func.pw, d=dx)
+    else:
+        out_h = get_deconv_outsize(in_h, kh, func.sy, func.ph)
+        out_w = get_deconv_outsize(in_w, kw, func.sx, func.pw)
 
     flops = in_c * out_c * kw * kh * in_w * in_h
     if not kwargs.get('fma_1flop'):
@@ -155,8 +158,8 @@ def calc_deconv2d(func, in_data, **kwargs):
         'k': (kw if kw == kh else (kh, kw)),
         's': (func.sx if func.sx == func.sy else (func.sy, func.sx)),
         'p': (func.pw if func.pw == func.ph else (func.ph, func.pw)),
-        'd': (func.dx if func.dx == func.dy else (func.dy, func.dx)),
-        'groups': func.groups,
+        'd': (dx if dx == dy else (dy, dx)),
+        'groups': g,
         'nobias': b is None
     }
     return (flops * batch_size, mread, mwrite, params)
@@ -207,7 +210,7 @@ def calc_linear(func, in_data, **kwargs):
     return (flops, mread, mwrite, params)
 
 
-@register(Shift)
+@register('chainer.functions.connection.shift.Shift')
 def calc_shift(func, in_data, **kwargs):
     """[Shift](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.shift.html)
 
