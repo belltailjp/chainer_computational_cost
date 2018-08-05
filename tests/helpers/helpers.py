@@ -1,7 +1,8 @@
+from distutils.version import LooseVersion
 import importlib
 import warnings
+
 import chainer
-from distutils.version import LooseVersion
 
 
 from chainer_computational_cost.cost_calculators import calculators

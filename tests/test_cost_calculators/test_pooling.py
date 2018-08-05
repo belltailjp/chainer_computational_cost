@@ -6,8 +6,8 @@ from helpers import calculate_cost
 
 def test_max_pooling():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
-    f = P.max_pooling_2d.MaxPooling2D(
-            np.int64(2), np.int64(2), np.int64(0), cover_all=True)
+    f = P.max_pooling_2d.MaxPooling2D(np.int64(2), np.int64(2),
+                                      np.int64(0), cover_all=True)
     flops, mread, mwrite, params = calculate_cost(f, [x])
 
     # flops is (output size) * (inside window operation)
@@ -23,8 +23,8 @@ def test_max_pooling():
 
 def test_average_pooling():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
-    f = P.average_pooling_2d.AveragePooling2D(
-            np.int64(2), np.int64(2), np.int64(0), cover_all=True)
+    f = P.average_pooling_2d.AveragePooling2D(np.int64(2), np.int64(2),
+                                              np.int64(0), cover_all=True)
     flops, mread, mwrite, params = calculate_cost(f, [x])
 
     # flops is (output size) * (inside window operation)
@@ -41,8 +41,8 @@ def test_average_pooling():
 def test_upsampling_2d():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     indices = np.random.randint(0, 9, (1, 3, 10, 10)).astype(np.int32)
-    f = P.upsampling_2d.Upsampling2D(
-            indices, ksize=np.int64(3), stride=np.int64(3), outsize=(30, 30))
+    f = P.upsampling_2d.Upsampling2D(indices, ksize=np.int64(3),
+                                     stride=np.int64(3), outsize=(30, 30))
     flops, mread, mwrite, params = calculate_cost(f, [x])
     assert flops == 0
     assert mread == 2 * 3 * 10 * 10
@@ -58,8 +58,8 @@ def test_upsampling_2d():
 def test_upsampling_2d_no_outsize():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     indices = np.random.randint(0, 9, (1, 3, 10, 10)).astype(np.int32)
-    f = P.upsampling_2d.Upsampling2D(
-            indices, ksize=np.int64(3), stride=np.int64(3))
+    f = P.upsampling_2d.Upsampling2D(indices, ksize=np.int64(3),
+                                     stride=np.int64(3))
     flops, mread, mwrite, params = calculate_cost(f, [x])
     assert flops == 0
     assert mread == 2 * 3 * 10 * 10
