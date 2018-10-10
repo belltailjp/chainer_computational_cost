@@ -84,6 +84,9 @@ class ComputationalCostHook(chainer.FunctionHook):
     _custom_cost_calculators = dict()
     max_digits = 10
 
+    # global counter to allow nested func
+    _hook_depth = 0
+
     def __init__(self, fma_1flop=True):
         self._fma_1flop = fma_1flop
         self._label_count = dict()
@@ -94,6 +97,16 @@ class ComputationalCostHook(chainer.FunctionHook):
         self._total_report = {
             'name': 'total', 'type': 'total'
         }
+        ComputationalCostHook._hook_depth += 1
+        self.name = "ComputationalCostHook-{}"\
+            .format(ComputationalCostHook._hook_depth)
+
+    def deleted(self, function=None):
+        """Callback function called by chainer when the hook lifetime has ended.
+
+        Please do not call it from anywhere in your code.
+        """
+        ComputationalCostHook._hook_depth -= 1
 
     def add_custom_cost_calculator(self, func_type, calculator):
         """Add custom cost calculator function.
