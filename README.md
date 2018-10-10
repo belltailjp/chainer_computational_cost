@@ -54,8 +54,8 @@ However,
 
 ## Requirements
 
-* Python 2.7, 3.3, 3.4, 3.5 and 3.6
-* Chainer 3.5, 4.x, 5.0.0b3
+* Python 2.7, 3.3, 3.4, 3.5, 3.6 and 3.7
+* Chainer 3.5, 4.4, 5.0.0rc1
 * six==1.11.0
 * (optional) texttable >= 1.4.0
 * (optional) pytest >= 3.5.1
