@@ -229,6 +229,7 @@ def test_deconv2d_grouped_with_bias_fma():
     }
 
 
+@require_chainer_version('4.0.0')   # dilate option requires v4.0.0
 def test_deconv2d_with_bias_fma_dilate():
     (c_in, h_in, w_in), (c_out, h_out, w_out) = (3, 10, 10), (12, 25, 25)
     k = 3
