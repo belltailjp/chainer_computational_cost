@@ -5,10 +5,11 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+  - "3.7-dev"
 env:
-  - CHAINER_VERSION=3.5.0   # the last release of chainer v3
-  - CHAINER_VERSION=4.3.1   # currently the last release of chainer v4
-  - CHAINER_VERSION=5.0.0b3
+  - CHAINER_VERSION=3.5.0     # the last release of chainer v3
+  - CHAINER_VERSION=4.4.0     # the last release of chainer v4
+  - CHAINER_VERSION=v5.0.0rc1
 install:
   - pip install chainer==$CHAINER_VERSION
   - pip install six==1.11.0
