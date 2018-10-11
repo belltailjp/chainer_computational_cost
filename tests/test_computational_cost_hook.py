@@ -10,7 +10,7 @@ import numpy as np
 
 import pytest
 
-import chainer_computational_cost
+from chainer_computational_cost import ComputationalCostHook
 
 
 class SimpleConvNet(chainer.Chain):
@@ -41,7 +41,7 @@ def test_simple_net():
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
     net = SimpleConvNet()
     with chainer.using_config('train', False):
-        with chainer_computational_cost.ComputationalCostHook() as cost:
+        with ComputationalCostHook() as cost:
             net(x)
             assert type(cost.layer_report) == OrderedDict
 
@@ -92,7 +92,7 @@ def test_repeat():
     net = SimpleConvNet()
 
     with chainer.using_config('train', False):
-        with chainer_computational_cost.ComputationalCostHook() as cost:
+        with ComputationalCostHook() as cost:
             net(x)
             layer_report = copy.deepcopy(cost.layer_report)
             for mode in ['md', 'csv', 'table']:
@@ -105,7 +105,7 @@ def test_report_property_keeps_internal_state():
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
     net = SimpleConvNet()
     with chainer.using_config('train', False):
-        with chainer_computational_cost.ComputationalCostHook() as cost:
+        with ComputationalCostHook() as cost:
             net(x)
 
             for rep_name in ['layer_report', 'summary_report',
@@ -122,7 +122,7 @@ def test_report_property_inserts_total_element():
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
     net = SimpleConvNet()
     with chainer.using_config('train', False):
-        with chainer_computational_cost.ComputationalCostHook() as cost:
+        with ComputationalCostHook() as cost:
             net(x)
             total1 = cost.layer_report['total']
             total2 = cost.summary_report['total']
@@ -145,7 +145,7 @@ def test_report_property_inserts_percentage():
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
     net = SimpleConvNet()
     with chainer.using_config('train', False):
-        with chainer_computational_cost.ComputationalCostHook() as cost:
+        with ComputationalCostHook() as cost:
             net(x)
 
             keys = 'flops%', 'mread%', 'mwrite%', 'mrw%'
@@ -171,7 +171,7 @@ def test_custom_cost_calculator():
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
     x = chainer.Variable(x)
     with chainer.using_config('train', False):
-        with chainer_computational_cost.ComputationalCostHook() as cost:
+        with ComputationalCostHook() as cost:
             with pytest.warns(UserWarning):
                 cost.add_custom_cost_calculator(AddConstant, calc_custom)
                 x = x + 1
@@ -202,7 +202,7 @@ def test_custom_cost_calculator_invalid():
     x = chainer.Variable(x)
     for f in [calc_not_tuple, calc_not_tuple, calc_insufficient_return]:
         with chainer.using_config('train', False):
-            with chainer_computational_cost.ComputationalCostHook() as cost:
+            with ComputationalCostHook() as cost:
                 with pytest.raises(TypeError), pytest.warns(UserWarning):
                     cost.add_custom_cost_calculator(AddConstant, f)
                     x = x + 1
@@ -218,7 +218,7 @@ def test_report_ignored_layer():
             return gys
 
     x = np.random.randn(1, 3, 32, 32).astype(np.float32)
-    with chainer_computational_cost.ComputationalCostHook() as cost:
+    with ComputationalCostHook() as cost:
         with pytest.warns(UserWarning):
             DummyFunc().apply(x)
             assert len(cost.ignored_layers) == 1
@@ -229,7 +229,7 @@ def test_report_ignored_layer():
 def test_blank_case():
     # Even if nothing happens while the hook lifetime,
     # it should not hang but show only a warning
-    with chainer_computational_cost.ComputationalCostHook() as ccost:
+    with ComputationalCostHook() as ccost:
         with pytest.warns(UserWarning):
             ccost.show_report()
         with pytest.warns(UserWarning):
@@ -239,7 +239,7 @@ def test_blank_case():
 def test_show_report_unit_and_digits():
     conv = L.Convolution2D(32, 64, ksize=3, pad=1)
     x = np.random.randn(8, 32, 128, 128).astype(np.float32)
-    with chainer_computational_cost.ComputationalCostHook() as ccost:
+    with ComputationalCostHook() as ccost:
         conv(x)
 
     # Just check if assumed value are calculated
@@ -329,3 +329,23 @@ def test_show_report_unit_and_digits():
     # Case when invalid column is specified
     with pytest.raises(ValueError):
         show_report(unit='G', columns=['name', 'wooooohoooooooo'])
+
+
+def test_nest():
+    x = chainer.Variable(np.zeros((1, 3, 32, 32)).astype(np.float32))
+    c = chainer.Variable(np.ones((1, 3, 32, 32)).astype(np.float32))
+    with chainer.using_config('train', False):
+        with ComputationalCostHook() as cost1:
+            x = x + c
+            with ComputationalCostHook() as cost2_1:
+                x = x + c
+                assert cost2_1.name == 'ComputationalCostHook-2'
+                assert cost2_1.layer_report['total']['flops'] == 3 * 32 * 32
+
+            with ComputationalCostHook() as cost2_2:
+                x = x + c
+                assert cost2_2.name == 'ComputationalCostHook-2'
+                assert cost2_2.layer_report['total']['flops'] == 3 * 32 * 32
+
+            assert cost1.name == 'ComputationalCostHook-1'
+            assert cost1.layer_report['total']['flops'] == 3 * 3 * 32 * 32
