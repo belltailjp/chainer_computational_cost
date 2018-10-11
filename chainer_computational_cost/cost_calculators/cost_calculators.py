@@ -27,7 +27,6 @@ def check_signature(func):
         p = inspect.getargspec(func)
         if len(p.args) != 2 or p.varargs is not None or p.keywords is None:
             return False
-        return True
     else:
         p = inspect.signature(func).parameters
         if len(p) != 3:
@@ -36,8 +35,6 @@ def check_signature(func):
         _, _, kwargs = p.keys()
         if p[kwargs].kind != inspect.Parameter.VAR_KEYWORD:
             return False
-
-        return True
 
     return True
 
@@ -76,11 +73,13 @@ def register(func):
             func = None
         except AttributeError:
             func = None
+    else:
+        func_name = func.__name__
 
     def reg(calculator):
         if not check_signature(calculator):
             warnings.warn("cost calculator signature mismatch: {}"
-                          .format(func.__name__))
+                          .format(func_name))
         elif func is not None:
             # If the function exists
             calculators[func] = calculator
@@ -89,8 +88,4 @@ def register(func):
             # register all the defined calculators including those cannot be
             # activated (e.g. chainer in this env is too old)
             all_calculators[func_name] = calculator
-
-        def f(*args, **kwargs):
-            return calculator(*args, **kwargs)
-        return f
     return reg
