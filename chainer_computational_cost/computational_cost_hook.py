@@ -196,9 +196,6 @@ class ComputationalCostHook(chainer.FunctionHook):
         If an unsupported function appears in computational graph, it simply
         ignores them.
         """
-        if type(function) is chainer.function.FunctionAdapter:
-            function = function._function
-
         outs = function.forward(in_data)
         input_shapes = [x.shape for x in in_data]
         output_shapes = [y.shape for y in outs]
@@ -474,9 +471,6 @@ class ComputationalCostHook(chainer.FunctionHook):
 
             if 'params' in rep:
                 rep['params'] = self._prettify_dict(rep['params'])
-            for c in cols:
-                if c not in rep:
-                    rep[c] = ''
             table_report.append([rep[c] for c in cols])
 
         if mode == 'csv':

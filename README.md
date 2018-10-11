@@ -561,9 +561,17 @@ We use pytest for unit-testing.
 Please write sufficient test cases when you support new functions
 or implement a new feataure.
 
-```python
+```bash
 % pip install pytest
 % python -m pytest
+```
+
+In order to check coverage locally, please confirm by following command.
+
+```bash
+% pip install pytest-cov
+% python -m pytest --cov chainer_computational_cost --cov-report html:cov_html
+% open cov_html/index.html
 ```
 
 Every PRs will be automatically tested by

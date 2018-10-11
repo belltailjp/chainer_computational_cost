@@ -229,6 +229,28 @@ def test_deconv2d_grouped_with_bias_fma():
     }
 
 
+@require_chainer_version('4.0.0')   # dilate option requires v4.0.0
+def test_deconv2d_with_bias_fma_dilate():
+    (c_in, h_in, w_in), (c_out, h_out, w_out) = (3, 10, 10), (12, 25, 25)
+    k = 3
+    d = 3
+
+    x = np.random.randn(1, c_in, h_in, w_in).astype(np.float32)
+    W = np.random.randn(c_in, c_out, k, k).astype(np.float32)
+    b = np.random.randn(c_out).astype(np.float32)
+    f = Deconvolution2DFunction(stride=2, pad=0, dilate=d)
+    flops, mr, mw, params = calculate_cost(f, [x, W, b], fma_1flop=True)
+
+    assert f.apply([x, W, b])[0].shape == (1, c_out, h_out, w_out)
+    assert flops == c_in * c_out * k * k * h_in * w_in
+    assert mr == c_in * h_in * w_in + c_in * c_out * k * k + c_out
+    assert mw == c_out * h_out * w_out
+    assert params == {
+        'k': k, 's': 2, 'p': 0, 'd': d,
+        'groups': 1, 'nobias': False
+    }
+
+
 def test_linear_nobias_fma():
     x = np.random.randn(1, 10).astype(np.float32)
     w = np.random.randn(20, 10).astype(np.float32)
