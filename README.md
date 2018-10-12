@@ -1,7 +1,7 @@
 # chainer-computational-cost
 
 [![Build Status](https://travis-ci.org/belltailjp/chainer_computational_cost.svg?branch=master)](https://travis-ci.org/belltailjp/chainer_computational_cost)
-[![Coverage Status](https://coveralls.io/repos/github/belltailjp/chainer_computational_cost/badge.svg?branch=travis)](https://coveralls.io/github/belltailjp/chainer_computational_cost?branch=travis)
+[![Coverage Status](https://coveralls.io/repos/github/belltailjp/chainer_computational_cost/badge.svg?branch=master)](https://coveralls.io/github/belltailjp/chainer_computational_cost?branch=master)
 
 This is a tool to estimate theoretical computational cost
 of a chainer-based neural network forward pass.
