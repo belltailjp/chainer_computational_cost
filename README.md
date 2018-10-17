@@ -164,11 +164,11 @@ Estimation values can be accessed through instance method of
 * `layer_report`
   * Layer-wise computational-cost estimations
 * `summary_report`
-	* Computational costs summarized for each layer types
+  * Computational costs summarized for each layer types
 * `ignored_layers`
   * List of layers that are not yet supported by chainer-computational-cost
 * `total_report`
-	* Total computational costs of the entire NN
+  * Total computational costs of the entire NN
     (layers caught during the lifetime of the hook object)
 
 
@@ -275,7 +275,7 @@ due to the rounding, because summary values are calculated before rounding.
 +-----------------------+----------+-------------+------------+------------+------------+
 | ReLU                  | 15       | 0.01355571  | 0.05049896 | 0.05049896 | 0.10099792 |
 +-----------------------+----------+-------------+------------+------------+------------+
-| ...									  | ...      | ...         | ...        | ...        | ...        |
+| ...                   | ...      | ...         | ...        | ...        | ...        |
 ```
 
 
@@ -328,7 +328,7 @@ The other way is to manually specify the column list.
 +--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
 | Convolution2DFunction-2  | 1.850  | 0.012   | 0.012    | 0.024  | [(1, 64, 224, 224)]  | k=3, s=1, p=1, d=1, groups=1, nobias=False |
 +--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
-| ...                      | ...    | ...     | ...      | ...    | ...								   | ...                                        |
+| ...                      | ...    | ...     | ...      | ...    | ...                  | ...                                        |
 +--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
 | total                    | 15.488 | 0.623   | 0.107    | 0.729  |                      |                                            |
 +--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
@@ -380,7 +380,7 @@ It is a huge dictionary whose structure is:
         "mwrite%": 11.21102960110868,
         "mrw%": 3.2802366168768162
     },
-	  ...
+    ...
 }
 ```
 
@@ -417,7 +417,7 @@ This contains total costs for each type of layers.
         "mwrite%": 47.32513069498619,
         "mrw%": 13.846866178002324
     },
-	  ...
+    ...
     "total": {
         "name": "total",
         "type": "total",
