@@ -94,9 +94,9 @@ from chainer_computational_cost import ComputationalCostHook
 net = L.VGG16Layers()
 x = np.random.random((1, 3, 224, 224)).astype(np.float32)
 with chainer.no_backprop_mode(), chainer.using_config('train', False):
-    with ComputationalCostHook(fma_1flop=True) as cost:
+    with ComputationalCostHook(fma_1flop=True) as cch:
         y = net(x)
-        cost.show_report(unit='G', mode='md')
+        cch.show_report(unit='G', mode='md')
 ```
 
 It will show the following table to stdout in markdown table format.
@@ -203,7 +203,7 @@ Currently it supports the following modes.
 * Prettified table (`mode='table'`)
 
 ```
->>> cost.show_summary_report(unit='G', mode='table')
+>>> cch.show_summary_report(unit='G', mode='table')
 +-----------------------+----------+--------+---------+----------+--------+
 |      Layer type       | # Layers | GFLOPs | MemRead | MemWrite | MemR+W |
 |                       |          |        |   GiB   |   GiB    |  GiB   |
@@ -232,9 +232,9 @@ You can specify stream (e.g. file object) to `dst` argument of
 `show_report` and `show_summary_report`.
 
 ```python
-cost.show_report(ost=sys.stderr, unit='G', mode='md')
+cch.show_report(ost=sys.stderr, unit='G', mode='md')
 
-cost.show_summary_report(ost=sys.stderr, unit='G', mode='md')
+cch.show_summary_report(ost=sys.stderr, unit='G', mode='md')
 ```
 
 
@@ -266,7 +266,7 @@ Be noted that you do not need to worry about numerical error in summary report
 due to the rounding, because summary values are calculated before rounding.
 
 ```
->>> cost.show_summary_report(unit='G', mode='table', n_digits=8)
+>>> cch.show_summary_report(unit='G', mode='table', n_digits=8)
 +-----------------------+----------+-------------+------------+------------+------------+
 |      Layer type       | # Layers |   GFLOPs    |  MemRead   |  MemWrite  |   MemR+W   |
 |                       |          |             |    GiB     |    GiB     |    GiB     |
@@ -291,7 +291,7 @@ There are some column definitions in `SummaryColumns` for
 `show_summary_report`, and `ReportColumns` for `show_report`, respectively.
 
 ```
->>> cost.show_summary_report(unit='G', mode='table', columns=SummaryColumns.ALL)
+>>> cch.show_summary_report(unit='G', mode='table', columns=SummaryColumns.ALL)
 +-----------------------+----------+--------+---------+----------+--------+---------+---------+----------+---------+
 |      Layer type       | # Layers | GFLOPs | MemRead | MemWrite | MemR+W |  FLOPs  | MemRead | MemWrite | MemR+W  |
 |                       |          |        |   GiB   |   GiB    |  GiB   |   (%)   |   (%)   |   (%)    |   (%)   |
@@ -315,7 +315,7 @@ There are some column definitions in `SummaryColumns` for
 The other way is to manually specify the column list.
 
 ```
->>> cost.show_report(unit='G', mode='table' , columns=[
+>>> cch.show_report(unit='G', mode='table' , columns=[
 ...     'name', 'flops', 'mread', 'mwrite', 'mrw', 'output_shapes', "params"
 ... ])
 +--------------------------+--------+---------+----------+--------+----------------------+--------------------------------------------+
@@ -337,11 +337,11 @@ The other way is to manually specify the column list.
 
 ### Access to the detailed report
 
-Once you let `cost` gather the computational costs as explained above,
+Once you let `cch` gather the computational costs as explained above,
 you can access to the report information directly.
 
 ```python
->>> cost.layer_report
+>>> cch.layer_report
 ```
 
 It is a huge dictionary whose structure is:
@@ -389,7 +389,7 @@ Also, summary report can be found.
 This contains total costs for each type of layers.
 
 ```python
->>> cost.summary_report
+>>> cch.summary_report
 {
     "Convolution2DFunction": {
         "type": "Convolution2DFunction",
@@ -453,11 +453,11 @@ def custom_calculator(func, in_data, **kwargs)
     return (0, 0, 0)
 
 with chainer.no_backprop_mode(), chainer.using_config('train', False):
-    with ComputationalCostHook(fma_1flop=True) as cost:
-        cost.add_custom_cost_calculator(F.math.basic_math.Add, custom_calculator)
+    with ComputationalCostHook(fma_1flop=True) as cch:
+        cch.add_custom_cost_calculator(F.math.basic_math.Add, custom_calculator)
         y = x + x   # Call Add
 
-        cost.report['Add-0']    # you can find custom estimation result
+        cch.report['Add-0']    # you can find custom estimation result
 ```
 
 A custom cost calculator has to have the following signature.
@@ -499,9 +499,9 @@ it shows a message like
 Also, you can access to which layers are ignored.
 
 ```python
-with ComputationalCostHook() as cost:
+with ComputationalCostHook() as cch:
   ...
-  print(cost.ignored_layers)
+  print(cch.ignored_layers)
 ```
 
 It has the following structure.
