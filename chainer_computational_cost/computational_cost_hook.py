@@ -59,12 +59,26 @@ class ComputationalCostHook(chainer.FunctionHook):
             floating point operation (default=`True`). Otherwise it is 2.
     """
 
-    _flops_coeff_table = {
-        None: 1, 'K': 10**3, 'M': 10**6, 'G': 10**9, 'T': 10**12
-    }
-    _bytes_coeff_table = {
-        None: 1, 'K': 2**10, 'M': 2**20, 'G': 2**30, 'T': 2**40
-    }
+    _flops_radix = 10**3
+    _bytes_radix = 2**10
+    _unit_list = ['', 'K', 'M', 'G', 'T']
+
+    def coeff_table(radix, unit_list):
+        return {u: radix ** i for (i, u) in enumerate(unit_list)}
+
+    _flops_coeff_table = coeff_table(_flops_radix, _unit_list)
+    _bytes_coeff_table = coeff_table(_bytes_radix, _unit_list)
+
+    def auto_radix(self, val, radix):
+        """Returns autotuned value and unit."""
+        val = float(val)
+        for unit in self._unit_list:
+            if val < radix:
+                return unit, val
+            val /= radix
+        else:
+            return unit, val * radix
+
     _col_header_table = {
         'type': 'Layer type',
         'n_layers': '# Layers',
@@ -437,27 +451,34 @@ class ComputationalCostHook(chainer.FunctionHook):
                              "Available options: {}"
                              .format(cols, ", ".join(rep.keys())))
 
-        if unit not in self._flops_coeff_table:
-            raise ValueError("Please specify either None, 'K', 'M', 'G' or 'T'"
-                             " to argument `unit`.")
-        coeff_flops = self._flops_coeff_table[unit]
-        coeff_bytes = self._bytes_coeff_table[unit]
         if unit is None:
             unit = ''
+        if unit in self._flops_coeff_table:
+            coeff_flops = self._flops_coeff_table[unit]
+            coeff_bytes = self._bytes_coeff_table[unit]
+        elif unit != 'auto':
+            raise ValueError("Please specify either None, 'K', 'M', 'G', 'T'"
+                             " or 'auto' to argument `unit`.")
 
         # make a header
         header = []
         for c in cols:
             # "{0}FLOPs" -> "GFLOPs", "{1}B/s" -> "GiB/s"
             fmt = self._col_header_table[c]
-            fmt = fmt.format(unit, unit + 'i' if len(unit) else '')
+            fmt = fmt.format(unit, unit + 'i' if len(unit) == 1 else '')
             header.append(fmt)
 
         # make table records
         table_report = [header]
         for layer, rep in report.items():
             # round estimations (and add prefixed unit)
-            if unit != '':
+            if unit == 'auto':
+                u, flops = self.auto_radix(rep['flops'], self._flops_radix)
+                rep['flops'] = self._round_to_s(flops, n_digits) + u
+                for c in ('mread', 'mwrite', 'mrw'):
+                    u, size = self.auto_radix(rep[c], self._bytes_radix)
+                    rep[c] = self._round_to_s(size, n_digits) + u
+            elif unit != '':
                 flops = float(rep['flops']) / coeff_flops
                 flops = self._round_to_s(flops, n_digits)
                 rep['flops'] = flops
