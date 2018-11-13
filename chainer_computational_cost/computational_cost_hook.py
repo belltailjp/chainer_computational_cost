@@ -465,8 +465,8 @@ class ComputationalCostHook(chainer.FunctionHook):
         for c in cols:
             # "{0}FLOPs" -> "GFLOPs", "{1}B/s" -> "GiB/s"
             fmt = self._col_header_table[c]
-            fmt = fmt.format(
-                (unit, unit + 'i') if len(unit) == 1 else ('', ''))
+            units = (unit, unit + 'i') if len(unit) == 1 else ('', '')
+            fmt = fmt.format(*units)
             header.append(fmt)
 
         # make table records
