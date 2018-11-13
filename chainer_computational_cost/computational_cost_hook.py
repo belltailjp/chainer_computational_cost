@@ -478,6 +478,7 @@ class ComputationalCostHook(chainer.FunctionHook):
                 rep['flops'] = self._round_to_s(flops, n_digits) + u
                 for c in ('mread', 'mwrite', 'mrw'):
                     u, size = self.auto_radix(rep[c], self._bytes_radix)
+                    u = u + 'i' if len(u) else u
                     rep[c] = self._round_to_s(size, n_digits) + u
             elif unit != '':
                 flops = float(rep['flops']) / coeff_flops
