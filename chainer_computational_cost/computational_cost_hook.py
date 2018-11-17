@@ -62,6 +62,9 @@ class ComputationalCostHook(chainer.FunctionHook):
     _flops_radix = 10**3
     _bytes_radix = 2**10
     _unit_list = ['', 'K', 'M', 'G', 'T']
+    _flops_list = ['flops']
+    _bytes_list = ['mread', 'mwrite', 'mrw']
+    _align_list = _flops_list + _bytes_list
 
     def coeff_table(radix, unit_list):
         return {u: radix ** i for (i, u) in enumerate(unit_list)}
@@ -69,15 +72,34 @@ class ComputationalCostHook(chainer.FunctionHook):
     _flops_coeff_table = coeff_table(_flops_radix, _unit_list)
     _bytes_coeff_table = coeff_table(_bytes_radix, _unit_list)
 
-    def auto_radix(self, val, radix):
-        """Returns autotuned value and unit."""
-        val = float(val)
-        for unit in self._unit_list:
-            if val < radix:
-                return unit, val
-            val /= radix
+    def align_value(self, rep, col, unit):
+        """Returns aligned value."""
+        if col in self._flops_list:
+            coeff = self._flops_coeff_table[unit]
+        elif col in self._bytes_list:
+            coeff = self._bytes_coeff_table[unit]
         else:
-            return unit, val * radix
+            raise ValueError("Unknown column specified: {}\n".format(col))
+        return rep[col] / coeff
+
+    def auto_radix(self, rep, col):
+        """Returns autotuned value and unit."""
+        if col in self._flops_list:
+            radix = self._flops_radix
+            i = ''
+        elif col in self._bytes_list:
+            radix = self._bytes_radix
+            i = 'i'
+        else:
+            raise ValueError("Unknown column specified: {}\n".format(col))
+        val = rep[col]
+        footer = ''
+        for unit in self._unit_list[:-1]:
+            if val < radix:
+                return unit, footer, val
+            val /= radix
+            footer = i
+        return self._unit_list[-1], footer, val
 
     _col_header_table = {
         'type': 'Layer type',
@@ -411,8 +433,8 @@ class ComputationalCostHook(chainer.FunctionHook):
             mode: `csv` (default), `md` and `table` are supported. When you use
                 `table` mode, it requires texttable package.
             unit: Supplementary units used for both computational cost (FLOPs)
-                and memory transfer (bytes). None, `K`, `M`, `G` (default) and
-                `T` are supported.
+                and memory transfer (bytes). `autoaligned` (default), `auto`,
+                None, `K`, `M`, `G` and `T` are supported.
             columns: Which columns to include in summary.
             n_digits: Specify how many digits after the deciaml point to show.
                 Default is 3. Minimum value is 0 where all the values are
@@ -451,42 +473,44 @@ class ComputationalCostHook(chainer.FunctionHook):
                              "Available options: {}"
                              .format(cols, ", ".join(rep.keys())))
 
-        if unit is None:
-            unit = ''
-        if unit in self._flops_coeff_table:
-            coeff_flops = self._flops_coeff_table[unit]
-            coeff_bytes = self._bytes_coeff_table[unit]
-        elif unit != 'auto':
-            raise ValueError("Please specify either None, 'K', 'M', 'G', 'T'"
-                             " or 'auto' to argument `unit`.")
+        if unit not in self._unit_list + [None, 'autoaligned', 'auto']:
+            raise ValueError("Please specify either None, 'K', 'M', 'G', 'T',"
+                             "`autoaligned`  or 'auto' to argument `unit`.")
+
+        units = {}
+        # auto align
+        if unit == 'autoaligned':
+            max_table = {c: 0 for c in self._align_list}
+            for layer, rep in report.items():
+                for c in self._align_list:
+                    max_table[c] = max(max_table[c], rep[c])
+            units = {
+                col: self.auto_radix(max_table, col)[0] for col in max_table}
 
         # make a header
         header = []
         for c in cols:
             # "{0}FLOPs" -> "GFLOPs", "{1}B/s" -> "GiB/s"
             fmt = self._col_header_table[c]
-            units = (unit, unit + 'i') if len(unit) == 1 else ('', '')
-            fmt = fmt.format(*units)
+            u = units[c] if (c in units) else unit
+            str_units = (u, u + 'i') if len(u) == 1 else ('', '')
+            fmt = fmt.format(*str_units)
             header.append(fmt)
 
         # make table records
         table_report = [header]
         for layer, rep in report.items():
             # round estimations (and add prefixed unit)
-            if unit == 'auto':
-                u, flops = self.auto_radix(rep['flops'], self._flops_radix)
-                rep['flops'] = self._round_to_s(flops, n_digits) + u
-                for c in ('mread', 'mwrite', 'mrw'):
-                    u, size = self.auto_radix(rep[c], self._bytes_radix)
-                    u = u + 'i' if len(u) else u
-                    rep[c] = self._round_to_s(size, n_digits) + u
-            elif unit != '':
-                flops = float(rep['flops']) / coeff_flops
-                flops = self._round_to_s(flops, n_digits)
-                rep['flops'] = flops
-                for c in ('mread', 'mwrite', 'mrw'):
-                    size = float(rep[c]) / coeff_bytes
-                    rep[c] = self._round_to_s(size, n_digits)
+            for c in self._align_list:
+                footer = ''
+                if unit == 'auto':
+                    u, f, size = self.auto_radix(rep, c)
+                    footer = u + f
+                elif unit == 'autoaligned':
+                    size = self.align_value(rep, c, units[c])
+                elif unit is not None:
+                    size = self.align_value(rep, c, unit)
+                rep[c] = self._round_to_s(size, n_digits) + footer
 
             # round percentage field
             for c in ('flops%', 'mread%', 'mwrite%', 'mrw%'):
