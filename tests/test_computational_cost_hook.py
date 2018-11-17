@@ -310,6 +310,22 @@ def test_show_report_unit_and_digits():
 
     assert_table(show_report(unit=None)[-2], expect)
 
+    # Case unit=auto:
+    # FLOPs/=1000^3, mem/=1024^2, 3 digits after the decimal point
+    expect = {col_flops: '2.416G', col_mr: '16.071Mi',
+              col_mw: '32.0Mi', col_mrw: '48.071Mi'}
+    assert_table(show_report(unit='auto')[-1], expect)
+    assert_table(show_report(unit='auto', mode='md')[-1], expect)
+    assert_table(show_report(unit='auto', mode='table')[-1], expect)
+
+    # Case unit=autoaligned:
+    # FLOPs/=1000^3, mem/=1024^2, 3 digits after the decimal point
+    expect = {col_flops: '2.416', col_mr: '16.071',
+              col_mw: '32.0', col_mrw: '48.071'}
+    assert_table(show_report(unit='autoaligned')[-1], expect)
+    assert_table(show_report(unit='autoaligned', mode='md')[-1], expect)
+    assert_table(show_report(unit='autoaligned', mode='table')[-1], expect)
+
     # Case unit=G: FLOPs/=1000^3, mem/=1024^3, 3 digits after the decimal point
     expect = {col_flops: '2.416', col_mr: '0.016',
               col_mw: '0.031', col_mrw: '0.047'}
