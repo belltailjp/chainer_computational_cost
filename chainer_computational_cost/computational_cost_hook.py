@@ -420,7 +420,7 @@ class ComputationalCostHook(chainer.FunctionHook):
         self._show_report_body(self.summary_report, ost, mode, unit,
                                columns, n_digits)
 
-    def show_report(self, ost=sys.stdout, mode='csv', unit='G',
+    def show_report(self, ost=sys.stdout, mode='csv', unit='autoaligned',
                     columns=ReportColumns.DEFAULT, n_digits=3):
         """Show computational cost aggregated for each layer.
 
