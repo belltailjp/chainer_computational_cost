@@ -295,10 +295,10 @@ def test_show_report_unit_and_digits():
 
     # Case: default columns check
     report_cols = ['Layer name', 'GFLOPs',
-                   'MemRead GiB', 'MemWrite GiB', 'MemR+W GiB']
+                   'MemRead MiB', 'MemWrite MiB', 'MemR+W MiB']
     assert report_cols == show_report()[0]
     summary_cols = ['Layer type', '# Layers', 'GFLOPs',
-                    'MemRead GiB', 'MemWrite GiB', 'MemR+W GiB']
+                    'MemRead MiB', 'MemWrite MiB', 'MemR+W MiB']
     assert summary_cols == show_summary_report()[0]
 
     # Case unit=None: raw values are shown
