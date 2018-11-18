@@ -474,8 +474,10 @@ class ComputationalCostHook(chainer.FunctionHook):
                              "Available options: {}"
                              .format(cols, ", ".join(rep.keys())))
 
-        if unit not in self._unit_list + [None, 'autoaligned', 'auto']:
-            raise ValueError("Please specify either None, 'K', 'M', 'G', 'T',"
+        if unit is None:
+            unit = ''
+        if unit not in self._unit_list + ['autoaligned', 'auto']:
+            raise ValueError("Please specify either '', 'K', 'M', 'G', 'T',"
                              "`autoaligned`  or 'auto' to argument `unit`.")
 
         units = {}
@@ -509,7 +511,7 @@ class ComputationalCostHook(chainer.FunctionHook):
                     footer = u + f
                 elif unit == 'autoaligned':
                     size = self.align_value(rep, c, units[c])
-                elif unit is not None:
+                elif unit != '':
                     size = self.align_value(rep, c, unit)
                 rep[c] = self._round_to_s(size, n_digits) + footer
 
