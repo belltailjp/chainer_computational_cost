@@ -59,15 +59,17 @@ class ComputationalCostHook(chainer.FunctionHook):
             floating point operation (default=`True`). Otherwise it is 2.
     """
 
-    _flops_radix = 10**3
-    _bytes_radix = 2**10
+    _flops_radix = float(10**3)
+    _bytes_radix = float(2**10)
     _unit_list = ['', 'K', 'M', 'G', 'T']
     _flops_list = ['flops']
     _bytes_list = ['mread', 'mwrite', 'mrw']
     _align_list = _flops_list + _bytes_list
 
     def coeff_table(radix, unit_list):
-        return {u: radix ** i for (i, u) in enumerate(unit_list)}
+        tbl = {u: radix ** i for (i, u) in enumerate(unit_list)}
+        tbl[''] = 1
+        return tbl
 
     _flops_coeff_table = coeff_table(_flops_radix, _unit_list)
     _bytes_coeff_table = coeff_table(_bytes_radix, _unit_list)
