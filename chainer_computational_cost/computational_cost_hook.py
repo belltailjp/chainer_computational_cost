@@ -387,8 +387,9 @@ class ComputationalCostHook(chainer.FunctionHook):
         """
         return copy.deepcopy(self._ignored_layers)
 
-    def show_summary_report(self, ost=sys.stdout, mode='csv', unit='G',
-                            columns=SummaryColumns.DEFAULT, n_digits=3):
+    def show_summary_report(self, ost=sys.stdout, mode='csv',
+                            unit='autoaligned', columns=SummaryColumns.DEFAULT,
+                            n_digits=3):
         """Show computational cost aggregated for each layer type.
 
         Summarizes based on chainer function. Every call of same function
