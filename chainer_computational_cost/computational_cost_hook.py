@@ -504,16 +504,17 @@ class ComputationalCostHook(chainer.FunctionHook):
         table_report = [header]
         for layer, rep in report.items():
             # round estimations (and add prefixed unit)
-            for c in self._align_list:
-                footer = ''
-                if unit == 'auto':
-                    u, f, size = self.auto_radix(rep, c)
-                    footer = u + f
-                elif unit == 'autoaligned':
-                    size = self.align_value(rep, c, units[c])
-                elif unit != '':
-                    size = self.align_value(rep, c, unit)
-                rep[c] = self._round_to_s(size, n_digits) + footer
+            if unit != '':
+                for c in self._align_list:
+                    footer = ''
+                    if unit == 'auto':
+                        u, f, size = self.auto_radix(rep, c)
+                        footer = u + f
+                    elif unit == 'autoaligned':
+                        size = self.align_value(rep, c, units[c])
+                    else:
+                        size = self.align_value(rep, c, unit)
+                    rep[c] = self._round_to_s(size, n_digits) + footer
 
             # round percentage field
             for c in ('flops%', 'mread%', 'mwrite%', 'mrw%'):
