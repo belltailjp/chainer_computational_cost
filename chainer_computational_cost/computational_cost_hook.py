@@ -480,7 +480,7 @@ class ComputationalCostHook(chainer.FunctionHook):
             unit = ''
         if unit not in self._unit_list + ['autoaligned', 'auto']:
             raise ValueError("Please specify either '', 'K', 'M', 'G', 'T',"
-                             "`autoaligned`  or 'auto' to argument `unit`.")
+                             " 'autoaligned' or 'auto' to argument `unit`.")
 
         units = {}
         # auto align
