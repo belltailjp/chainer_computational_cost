@@ -122,6 +122,19 @@ def calc_upsampling_2d(func, in_data, **kwargs):
 
 @register(Unpooling2D)
 def calc_unpooling_2d(func, in_data, **kwargs):
+    """[Unpooling2D](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.unpooling_2d.html)
+
+    Unpooling2D only reads the data from memory and writes to the certain
+    position in the output. Unlike the upsampling2D, it does not use indices
+    and all pixels are filled by corresponding pixels in the input tensor.
+
+    | Item   | Value |
+    |:-------|:------|
+    | FLOPs  | $$ 0 $$ |
+    | mread  | $$ \| x \| $$ |
+    | mwrite | $$ \| y \| $$ |
+    | params | Unpooling parameter `k`, `s`, `p`, `outsize` and `cover_all` |
+    """
     x, = in_data
     n, c, h, w = x.shape
     kh, kw = int(func.kh), int(func.kw)
