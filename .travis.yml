@@ -3,7 +3,8 @@ python:
   - "2.7"
   - "3.5"
   - "3.6"
-  - "3.7-dev"
+  - "3.7"
+dist: xenial
 env:
   - CHAINER_VERSION=4.5.0     # the last release of chainer v4
   - CHAINER_VERSION=5.2.0
