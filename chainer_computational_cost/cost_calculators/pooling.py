@@ -2,6 +2,7 @@ from chainer_computational_cost.cost_calculators import register
 
 from chainer.functions.pooling.average_pooling_2d import AveragePooling2D
 from chainer.functions.pooling.max_pooling_2d import MaxPooling2D
+from chainer.functions.pooling.unpooling_2d import Unpooling2D
 from chainer.functions.pooling.upsampling_2d import Upsampling2D
 
 from chainer.utils.conv import get_conv_outsize
@@ -117,3 +118,39 @@ def calc_upsampling_2d(func, in_data, **kwargs):
         'cover_all': func.cover_all
     }
     return (0, x.size + indices.size, n * c * outh * outw, params)
+
+
+@register(Unpooling2D)
+def calc_unpooling_2d(func, in_data, **kwargs):
+    """[Unpooling2D](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.unpooling_2d.html)
+
+    Unpooling2D only reads the data from memory and writes to the certain
+    position in the output. Unlike the upsampling2D, it does not use indices
+    and all pixels are filled by corresponding pixels in the input tensor.
+
+    | Item   | Value |
+    |:-------|:------|
+    | FLOPs  | $$ 0 $$ |
+    | mread  | $$ \| x \| $$ |
+    | mwrite | $$ \| y \| $$ |
+    | params | Unpooling parameter `k`, `s`, `p`, `outsize` and `cover_all` |
+    """
+    x, = in_data
+    n, c, h, w = x.shape
+    kh, kw = int(func.kh), int(func.kw)
+    sy, sx = int(func.sy), int(func.sx)
+    ph, pw = int(func.ph), int(func.pw)
+
+    outh, outw = func.outh, func.outw
+    if outh is None:
+        outh = get_deconv_outsize(h, kh, sy, ph, cover_all=func.cover_all)
+    if outw is None:
+        outw = get_deconv_outsize(w, kw, sx, pw, cover_all=func.cover_all)
+    params = {
+        'k': kw if kw == kh else (kh, kw),
+        's': sx if sx == sy else (sy, sx),
+        'p': pw if pw == ph else (ph, pw),
+        'outsize': (outh, outw),
+        'cover_all': func.cover_all
+    }
+    return (0, x.size, n * c * outh * outw, params)

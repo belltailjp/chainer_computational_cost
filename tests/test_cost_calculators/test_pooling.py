@@ -38,6 +38,37 @@ def test_average_pooling():
     assert type(params['p']) is int
 
 
+def test_unpooling_2d():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = P.unpooling_2d.Unpooling2D(
+        ksize=np.int64(3), stride=np.int64(3), outsize=(30, 30))
+    flops, mread, mwrite, params = calculate_cost(f, [x])
+    assert flops == 0
+    assert mread == 1 * 3 * 10 * 10
+    assert mwrite == 3 * 30 * 30
+    assert params == {
+        'k': 3, 's': 3, 'p': 0, 'outsize': (30, 30), 'cover_all': True
+    }
+    assert type(params['k']) is int
+    assert type(params['s']) is int
+    assert type(params['p']) is int
+
+
+def test_unpooling_2d_no_outsize():
+    x = np.random.randn(1, 3, 10, 10).astype(np.float32)
+    f = P.unpooling_2d.Unpooling2D(ksize=np.int64(3), stride=np.int64(3))
+    flops, mread, mwrite, params = calculate_cost(f, [x])
+    assert flops == 0
+    assert mread == 1 * 3 * 10 * 10
+    assert mwrite == 3 * 28 * 28
+    assert params == {
+        'k': 3, 's': 3, 'p': 0, 'outsize': (28, 28), 'cover_all': True
+    }
+    assert type(params['k']) is int
+    assert type(params['s']) is int
+    assert type(params['p']) is int
+
+
 def test_upsampling_2d():
     x = np.random.randn(1, 3, 10, 10).astype(np.float32)
     indices = np.random.randint(0, 9, (1, 3, 10, 10)).astype(np.int32)

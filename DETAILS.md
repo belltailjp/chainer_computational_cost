@@ -53,6 +53,7 @@ is written in [README.md](README.md).
   * [AveragePooling2D](#averagepooling2d)
   * [MaxPooling2D](#maxpooling2d)
   * [Upsampling2D](#upsampling2d)
+  * [Unpooling2D](#unpooling2d)
 
 
 ## Activation
@@ -629,4 +630,18 @@ ignores this difference and considers indices to be same as input.
 | mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%202%20%5C%7C%20x%20%5C%7C%20"/> |
 | mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20y%20%5C%7C%20"/> |
 | params | Upsampling parameter `k`, `s`, `p`, `outsize` and `cover_all` |
+
+
+### [Unpooling2D](https://docs.chainer.org/en/v4.3.0/reference/generated/chainer.functions.unpooling_2d.html)
+
+Unpooling2D only reads the data from memory and writes to the certain
+position in the output. Unlike the upsampling2D, it does not use indices
+and all pixels are filled by corresponding pixels in the input tensor.
+
+| Item   | Value |
+|:-------|:------|
+| FLOPs  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%200%20"/> |
+| mread  | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20x%20%5C%7C%20"/> |
+| mwrite | <img src="https://latex.codecogs.com/png.latex?%5Cdpi%7B130%7D%20%5Cnormal%20%20%5C%7C%20y%20%5C%7C%20"/> |
+| params | Unpooling parameter `k`, `s`, `p`, `outsize` and `cover_all` |
 
