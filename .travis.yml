@@ -1,23 +1,22 @@
 language: python
 python:
   - "2.7"
-  - "3.3"
-  - "3.4"
   - "3.5"
   - "3.6"
-  - "3.7-dev"
+  - "3.7"
+dist: xenial
 env:
-  - CHAINER_VERSION=3.5.0     # the last release of chainer v3
   - CHAINER_VERSION=4.5.0     # the last release of chainer v4
-  - CHAINER_VERSION=5.0.0
+  - CHAINER_VERSION=5.2.0
+  - CHAINER_VERSION=6.0.0b2
 install:
   - pip install chainer==$CHAINER_VERSION
-  - pip install six==1.11.0
-  - pip install texttable==1.4.0
-  - pip install flake8==2.5.5
-  - pip install pytest==3.5.1
-  - pip install pytest-cov==2.5.1
-  - pip install coveralls==1.3.0
+  - pip install six==1.12.0
+  - pip install texttable==1.6.0
+  - pip install flake8==3.7.5
+  - pip install pytest==4.2.1
+  - pip install pytest-cov==2.6.1
+  - pip install coveralls==1.5.1
 script:
   - python -m pytest --cov chainer_computational_cost
   - flake8 .
