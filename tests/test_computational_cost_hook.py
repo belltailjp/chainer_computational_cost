@@ -11,6 +11,9 @@ import numpy as np
 import pytest
 
 from chainer_computational_cost import ComputationalCostHook
+from chainer_computational_cost import ReportColumns
+
+from helpers import require_chainer_version
 
 
 class SimpleConvNet(chainer.Chain):
@@ -402,3 +405,35 @@ def test_nest():
 
             assert cost1.name == 'ComputationalCostHook-1'
             assert cost1.layer_report['total']['flops'] == 3 * 3 * 32 * 32
+
+
+@require_chainer_version('6.0.0')
+def test_chainerx():
+    x = np.random.randn(1, 3, 32, 32).astype(np.float32)
+
+    # Get non-ChainerX based version
+    net = SimpleConvNet()
+    with chainer.using_config('train', False):
+        with ComputationalCostHook() as cost:
+            net(x)
+            correct_report = cost.layer_report
+
+    # Get ChainerX based report
+    device = chainer.get_device('-1')
+    net = SimpleConvNet()
+    net.to_device(device)
+    device.use()
+
+    with chainer.using_config('train', False):
+        with ComputationalCostHook() as cost:
+            net(x)
+            chainerx_report = cost.layer_report
+
+    # Compare
+    assert sorted(correct_report.keys()) == sorted(chainerx_report.keys())
+    for layer, correct in correct_report.items():
+        if layer == 'total':
+            assert chainerx_report['total'] == correct
+        else:
+            for key in ReportColumns.ALL:
+                assert chainerx_report[layer][key] == correct[key]
