@@ -55,7 +55,7 @@ However,
 ## Requirements
 
 * Python 2.7, 3.5, 3.6 and 3.7
-* Chainer 4.x, 5.x and 6.0(beta)
+* Chainer 4.x, 5.x and 6.0 (including [ChainerX](https://docs.chainer.org/en/v6.0.0/chainerx/tutorial/index.html))
 * six==1.12.0
 * (optional) texttable >= 1.4.0
 * (optional) pytest >= 4.2.1
