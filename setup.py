@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='chainer_computational_cost',
-      version='0.1.1',
+      version='0.1.2',
       description='Chainer theoretical computational cost estimator',
       author='Daichi SUZUO',
       author_email='suzuo@preferred.jp',
