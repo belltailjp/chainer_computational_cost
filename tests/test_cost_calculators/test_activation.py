@@ -39,7 +39,7 @@ def test_activation_sigmoid():
     x = np.random.randn(1, 3, 100, 100).astype(np.float32)
     f = A.sigmoid.Sigmoid()
     flops, mread, mwrite, params = calculate_cost(f, [x])
-    assert flops == x.size
+    assert flops == 4 * x.size
     assert mread == x.size
     assert mwrite == x.size
     assert params == dict()

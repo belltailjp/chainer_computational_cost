@@ -84,7 +84,7 @@ def calc_sigmoid(func, in_data, **kwargs):
     | params | N/A |
     """
     x, = in_data
-    return (x.size, x.size, x.size, {})
+    return (4 * x.size, x.size, x.size, {})
 
 
 @register(Softmax)
